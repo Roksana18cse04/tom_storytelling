@@ -1,0 +1,31 @@
+{
+  "memory": {
+    "abc": [
+      {
+        "role": "User",
+        "content": "hi"
+      },
+      {
+        "role": "Assistant",
+        "content": "What\u2019s one of the first memories you can recall from childhood?"
+      },
+      {
+        "role": "User",
+        "content": "i was too small then i dont remember many"
+      },
+      {
+        "role": "Assistant",
+        "content": "What were your parents\u2019 names and occupations?"
+      },
+      {
+        "role": "User",
+        "content": "i was too small then i dont remember many"
+      },
+      {
+        "role": "Assistant",
+        "content": "Where and when were you born? What do you remember (or know) about the place and time?"
+      }
+    ]
+  },
+  "user_phase": {}
+}
