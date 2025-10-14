@@ -1,31 +1,349 @@
 {
-  "memory": {
-    "abc": [
-      {
-        "role": "User",
-        "content": "hi"
-      },
-      {
-        "role": "Assistant",
-        "content": "What\u2019s one of the first memories you can recall from childhood?"
-      },
-      {
-        "role": "User",
-        "content": "i was too small then i dont remember many"
-      },
-      {
-        "role": "Assistant",
-        "content": "What were your parents\u2019 names and occupations?"
-      },
-      {
-        "role": "User",
-        "content": "i was too small then i dont remember many"
-      },
-      {
-        "role": "Assistant",
-        "content": "Where and when were you born? What do you remember (or know) about the place and time?"
-      }
-    ]
+  "memory_map": {
+    "abc": {
+      "childhood": [
+        {
+          "id": "d7011b52-4f02-4458-8ae3-15e3161a4f41",
+          "question": "",
+          "response": "hi",
+          "snippet": "hi",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T17:44:58.190427"
+        },
+        {
+          "id": "ad7e4ea9-62f0-46e4-b26e-3ae6962eb5c8",
+          "question": "What\u2019s one of the first memories you can recall from childhood?",
+          "response": "",
+          "snippet": "",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T17:44:59.842431"
+        },
+        {
+          "id": "8ed95fb2-8bf9-4ab0-8a3e-397a97f5b6dd",
+          "question": "",
+          "response": "my first day at school was quite interesting",
+          "snippet": "my first day at school was quite interesting",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T17:45:36.118192"
+        },
+        {
+          "id": "463a558d-fb61-46eb-99fb-3cf8c0f33838",
+          "question": "What was your school like in those early years?",
+          "response": "",
+          "snippet": "",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T17:45:37.661025"
+        },
+        {
+          "id": "f445f68b-474f-44ed-a4d6-b91d47d6ed7c",
+          "question": "",
+          "response": "it was agovt primary school, i was scared of school and i was 5 years old then",
+          "snippet": "it was agovt primary school, i was scared of school and i was 5 years old then",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T17:46:13.902995"
+        },
+        {
+          "id": "2ec5b62f-54b0-4f04-8d6c-befd53654b7b",
+          "question": "What were your parents\u2019 names and occupations?",
+          "response": "",
+          "snippet": "",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T17:46:17.391984"
+        },
+        {
+          "id": "fa8085d0-a378-41a7-a23b-c884d04f142a",
+          "question": "",
+          "response": "my father was a military person, he was strict about school and education",
+          "snippet": "my father was a military person, he was strict about school and education",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T17:46:52.264528"
+        },
+        {
+          "id": "48a9a4bf-46ea-444e-a41e-f456830cba1c",
+          "question": "Tell me about family life and relationships at this time.",
+          "response": "hi",
+          "snippet": "hi",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T17:51:44.269862"
+        },
+        {
+          "id": "87cad069-db48-41b1-b25f-3b4a0271a54e",
+          "question": "Who were the people closest to you as a child?",
+          "response": "my parents and a cousin",
+          "snippet": "my parents and a cousin",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T17:52:04.605105"
+        },
+        {
+          "id": "439ebe37-8102-4f01-940c-31ead6b7e020",
+          "question": "Do you have siblings? Names and birth order?",
+          "response": "have a younger brother and a sister",
+          "snippet": "have a younger brother and a sister",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:07:18.627982"
+        },
+        {
+          "id": "9603a8f3-cb68-48ec-80a0-5107a8a6f921",
+          "question": "Tell me about the house you grew up in.",
+          "response": "it was beautiful full of chaos",
+          "snippet": "it was beautiful full of chaos",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:07:42.322703"
+        },
+        {
+          "id": "2e4ebbe8-12dc-43ec-8fff-fc2b8dd86700",
+          "question": "What\u2019s a family tradition or routine you remember from childhood?",
+          "response": "we belong to a farmer family, so harvesting was the most exciting",
+          "snippet": "we belong to a farmer family, so harvesting was the most exciting",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:08:19.322814"
+        },
+        {
+          "id": "7cf8eeba-f568-4285-8f43-455477432ded",
+          "question": "Did you have a pet or animals around you growing up?",
+          "response": "no",
+          "snippet": "no",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:08:27.233123"
+        },
+        {
+          "id": "2f2ea811-b14d-4f52-9c8e-bafe21876df8",
+          "question": "Did you have a favourite toy or game you loved?",
+          "response": "no",
+          "snippet": "no",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:08:32.144889"
+        },
+        {
+          "id": "b31a05b5-a5a2-4928-b9c0-45ab2de958db",
+          "question": "Where did you spend most of your time playing?",
+          "response": "outdoor",
+          "snippet": "outdoor",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:08:45.185336"
+        },
+        {
+          "id": "3ff0593d-270e-4e75-978e-cadd8a822731",
+          "question": "Tell me about a moment that made you feel especially happy as a child.",
+          "response": "whenever i got new football",
+          "snippet": "whenever i got new football",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:09:09.154602"
+        },
+        {
+          "id": "c0d38c3f-d06b-40e5-8ff3-b8a6cbdb0ae5",
+          "question": "Where and when were you born? What do you remember (or know) about the place and time?",
+          "response": "no",
+          "snippet": "no",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:09:17.778042"
+        },
+        {
+          "id": "1707b930-3394-48a7-9c50-ad86044fcfba",
+          "question": "What schools did you attend, and in (approximately) what years?",
+          "response": "at 2004",
+          "snippet": "at 2004",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:09:28.878840"
+        }
+      ],
+      "teenage years": [
+        {
+          "id": "5e0d2a21-5fdb-44bc-8abb-ae2882f7a3e0",
+          "question": "What do you remember most about your teenage school years?",
+          "response": "it was super fun, we use to play a lot",
+          "snippet": "it was super fun, we use to play a lot",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:10:31.826280"
+        },
+        {
+          "id": "5559e585-db7b-4eb3-b37c-c730bcbd6457",
+          "question": "Who were your closest friends at this stage of life?",
+          "response": "there was many",
+          "snippet": "there was many",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:10:48.261579"
+        },
+        {
+          "id": "5a01fd43-953c-4b61-85d8-55c36aa079d1",
+          "question": "Did you have a hobby, sport, or passion that was important to you?",
+          "response": "yes, sports",
+          "snippet": "yes, sports",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:11:00.833276"
+        },
+        {
+          "id": "4855a528-3419-455e-a2b8-d109036f0fd3",
+          "question": "What were your dreams or ambitions at that age?",
+          "response": "wanted to be a doctor",
+          "snippet": "wanted to be a doctor",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:11:17.929696"
+        },
+        {
+          "id": "3ca6563d-4652-4fdd-97d3-1754ec2154bc",
+          "question": "Tell me about a challenge you faced as a teenager.",
+          "response": "getting a gf then",
+          "snippet": "getting a gf then",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:11:38.324096"
+        },
+        {
+          "id": "ea8ae2dc-e4aa-44ac-a796-710649e80478",
+          "question": "What was a moment when you felt independent for the first time?",
+          "response": "at the age of 26",
+          "snippet": "at the age of 26",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:11:53.019535"
+        },
+        {
+          "id": "265c4d55-555c-4bbe-b479-c12521135ebb",
+          "question": "Did you have a first job, or earn money in some way?",
+          "response": "no",
+          "snippet": "no",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:12:05.109164"
+        },
+        {
+          "id": "b50bdc55-447b-4be8-80f7-e85f87ff5a0a",
+          "question": "Was there any particular music, film, or book that defined that time for you?",
+          "response": "no",
+          "snippet": "no",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:12:09.673163"
+        },
+        {
+          "id": "42d1946d-800d-4861-8369-522c39f755d0",
+          "question": "Did you experience a moment of rebellion or independence that stood out?",
+          "response": "no",
+          "snippet": "no",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:12:23.437016"
+        }
+      ],
+      "early adulthood": [
+        {
+          "id": "69bb181b-c1fd-4a4e-b025-a3c5898ec7a8",
+          "question": "Can you describe your first experience with responsibility or managing your own life?",
+          "response": "",
+          "snippet": "",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:12:25.904657"
+        }
+      ]
+    },
+    "bbc": {
+      "childhood": [
+        {
+          "id": "ab40e011-6e49-4e79-a787-f13529a7e953",
+          "question": "Free Talk",
+          "response": "hi",
+          "snippet": "hi",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:55:45.450085"
+        },
+        {
+          "id": "af397f95-daa8-407e-97bc-148f9b5b72d4",
+          "question": "Free Talk",
+          "response": "hi",
+          "snippet": "hi",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:58:46.351002"
+        },
+        {
+          "id": "4cfae454-b756-4594-84fa-519aeaa72cf1",
+          "question": "What\u2019s one of the first memories you can recall from childhood?",
+          "response": "i do not remember anything about childhood",
+          "snippet": "i do not remember anything about childhood",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T18:59:19.228145"
+        },
+        {
+          "id": "564ce80c-7d7e-4dd7-a6f2-9ce13727c0b0",
+          "question": "Where and when were you born? What do you remember (or know) about the place and time?",
+          "response": "no",
+          "snippet": "no",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T19:00:16.190141"
+        },
+        {
+          "id": "4fc254e4-ba91-497c-aafe-4abd79d8dbaf",
+          "question": "What were your parents\u2019 names and occupations?",
+          "response": "",
+          "snippet": "",
+          "photos": [],
+          "audio_clips": [],
+          "contributors": [],
+          "timestamp": "2025-10-13T19:00:16.960452"
+        }
+      ]
+    }
   },
-  "user_phase": {}
+  "user_phase": {
+    "abc": "early adulthood"
+  }
 }

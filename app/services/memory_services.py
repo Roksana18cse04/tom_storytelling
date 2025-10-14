@@ -1,5 +1,8 @@
-import json, os, uuid, datetime
+#app/services/memory_services.py
+
+import json, os, uuid, datetime, re
 from typing import Dict, List
+
 
 class MemoryService:
     def __init__(self):
@@ -10,20 +13,25 @@ class MemoryService:
 
     # ─── Load & Save ─────────────────────────────────────────────────────────
     def _load_memory(self):
+        """Load existing memory file safely."""
         if os.path.exists(self.file_path):
-            with open(self.file_path, "r") as f:
-                data = json.load(f)
-                self.memory_map = data.get("memory_map", {})
-                self.user_phase = data.get("user_phase", {})
+            try:
+                with open(self.file_path, "r") as f:
+                    data = json.load(f)
+                    self.memory_map = data.get("memory_map", {})
+                    self.user_phase = data.get("user_phase", {})
+            except json.JSONDecodeError:
+                self.memory_map, self.user_phase = {}, {}
 
     def _save_memory(self):
+        """Persist current memory state."""
         with open(self.file_path, "w") as f:
             json.dump({
                 "memory_map": self.memory_map,
                 "user_phase": self.user_phase
             }, f, indent=2)
 
-    # ─── Category Phase Handling ─────────────────────────────────────────────
+    # ─── Phase Handling ─────────────────────────────────────────────────────
     def get_phase(self, user_id: str) -> str:
         """Return user's current phase, default to childhood."""
         return self.user_phase.get(user_id, "childhood")
@@ -33,16 +41,30 @@ class MemoryService:
         self.user_phase[user_id] = phase
         self._save_memory()
 
-    # ─── Memory Management ───────────────────────────────────────────────────
+    # ─── generate snippet ───────────────────────────────────────────────────
+    def _generate_snippet(self, response: str, max_length: int = 120) -> str:
+        """
+        Extracts the first sentence or short preview from user's story.
+        """
+        if not response:
+            return ""
+        # Split by sentence-ending punctuation
+        sentence = re.split(r'(?<=[.!?]) +', response.strip())[0]
+        snippet = sentence.strip()
+        if len(snippet) > max_length:
+            snippet = snippet[:max_length].rsplit(" ", 1)[0] + "..."
+        return snippet
+
+    # ─── Memory Management ────────────────────────────────────────────────────
     def add_memory(self, user_id: str, category: str, question: str, response: str,
                    photos: List[str] = None, audio_clips: List[str] = None,
                    contributors: List[str] = None):
-        """Add a new memory entry under a given life category."""
         photos = photos or []
         audio_clips = audio_clips or []
         contributors = contributors or []
 
-        snippet = response.split(".")[0] + "." if "." in response else response
+        snippet = self._generate_snippet(response)
+
         memory_entry = {
             "id": str(uuid.uuid4()),
             "question": question,
@@ -90,9 +112,30 @@ class MemoryService:
                 formatted_lines.append(f"Q: {mem['question']}")
                 formatted_lines.append(f"A: {mem['response']}\n")
         return "\n".join(formatted_lines)
-        
-memory_service = MemoryService()
 
+    # ─── Helpers for LLM ─────────────────────────────────────────────────────
+    def get_history(self, user_id: str):
+        """Return a chronological conversation-like history."""
+        user_data = self.memory_map.get(user_id, {})
+        history = []
+        for category, memories in user_data.items():
+            for mem in memories:
+                if mem["question"]:
+                    history.append({"role": "Assistant", "content": mem["question"]})
+                if mem["response"]:
+                    history.append({"role": "User", "content": mem["response"]})
+        return history
+
+    def add_message(self, user_id: str, role: str, content: str):
+        """Store assistant messages only; user messages are paired elsewhere."""
+        category = self.get_phase(user_id)
+        if role == "Assistant":
+            self.add_memory(user_id, category, content, "")
+
+
+
+# Singleton instance
+memory_service = MemoryService()
 
 
 # from typing import Dict, List

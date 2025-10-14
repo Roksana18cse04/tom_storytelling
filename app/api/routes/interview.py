@@ -1,88 +1,64 @@
-# # app/api/routes/interview.py
-# from fastapi import APIRouter, UploadFile, Form, HTTPException
-# from app.services.llm_services import LLMService
-# from app.services.transcription_services import transcribe_audio
-# from app.services.memory_services import MemoryService  # shared instance
-# from typing import Optional
-
-
-# router = APIRouter()
-# llm = LLMService()
-# memory_service= MemoryService()
-
-# @router.post("/")
-# async def interview(
-#     user_id: str = Form(...),
-#     text: Optional[str] = Form(None),
-#     audio: Optional[UploadFile] = None
-# ):
-#     try:
-#         if audio:
-#             text = await transcribe_audio(audio)
-
-#         if not text:
-#             raise HTTPException(status_code=400, detail="Either text or audio must be provided")
-
-#         # Get LLM reply
-#         response = llm.chat(user_id, text)
-
-#         # Save both user and assistant messages to memory
-#         memory_service.add_message(user_id, "User", text)
-
-        
-
-#         response= llm.chat(user_id, prompt)
-
-#         memory_service.add_message(user_id, "Assistant", response)
-
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
+#app/api/routes/interview.py
 from fastapi import APIRouter, UploadFile, Form, HTTPException
 from app.services.llm_services import LLMService
 from app.services.transcription_services import transcribe_audio
-from app.services.memory_services import MemoryService
+from app.services.memory_services import memory_service
 from typing import Optional
+import logging
 
 router = APIRouter()
 llm = LLMService()
-memory_service = MemoryService()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/")
 async def interview(
     user_id: str = Form(...),
     text: Optional[str] = Form(None),
-    audio: Optional[UploadFile] = None
+    audio: Optional[UploadFile] = None,
 ):
+    """
+    Process a user interview input (text or audio),
+    store it with the previous question, and return a new follow-up.
+    """
     try:
+        # ─── Step 1: Handle Input ───────────────────────────────
         if audio:
             text = await transcribe_audio(audio)
 
         if not text:
-            raise HTTPException(status_code=400, detail="Either text or audio must be provided")
+            raise HTTPException(status_code=400, detail="Either text or audio must be provided.")
 
-        # Save user response
-        # memory_service.add_memory(user_id, "User", text)
-
-        # Generate structured follow-up question
-        followup = llm.generate_followup(user_id, text)
-
-        # Save assistant question to memory
-        # memory_service.add_memory(user_id, "Assistant", followup)
+        # ─── Step 2: Determine category (life phase) ─────────────
         category = memory_service.get_phase(user_id)
-        question = followup  # the question AI asked previously (optional)
-        response_text = text  # user’s reply text
 
+        # ─── Step 3: Find last asked question ────────────────────
+        user_data = memory_service.get_user_memories(user_id)
+        last_question = None
+        if category in user_data and user_data[category]:
+            for mem in reversed(user_data[category]):
+                if mem["question"] and not mem["response"]:
+                    last_question = mem["question"]
+                    user_data[category].remove(mem)
+                    break
+
+        # ─── Step 4: Save question–answer pair ──────────────────
         memory_service.add_memory(
             user_id=user_id,
             category=category,
-            question=question,
-            response=response_text,
-            photos=[],  # will integrate uploads later
+            question=last_question or "Free Talk",
+            response=text,
+            photos=[],
             audio_clips=[],
         )
 
+        # ─── Step 5: Generate next follow-up question ────────────
+        followup = llm.generate_followup(user_id, text)
+
         return {"response": followup}
 
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.exception("Interview processing failed.")
         raise HTTPException(status_code=500, detail=str(e))
