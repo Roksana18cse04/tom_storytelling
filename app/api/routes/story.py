@@ -6,9 +6,10 @@ from app.services.narrative_engine import narrative_engine
 router = APIRouter()
 
 @router.get("/{user_id}")
-def compile_story(user_id: str, session_id: str = Query(..., description="The session ID to generate story for")):
+async def compile_story(user_id: str, session_id: str = Query(..., description="The session ID to generate story for")):
     """Compile a narrative story for a specific session of a given user."""
-    story = narrative_engine.generate_session_story(user_id, session_id)
+    story = await narrative_engine.generate_session_story(user_id, session_id)
     if not story:
         raise HTTPException(status_code=404, detail="No memories found for this user/session.")
     return {"story": story}
+          

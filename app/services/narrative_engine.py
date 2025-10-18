@@ -13,7 +13,7 @@ class NarrativeEngine:
     def __init__(self):
         self.model = "gpt-4o-mini"
 
-    def generate_session_story(self, user_id: str, session_id: str) -> str:
+    async def generate_session_story(self, user_id: str, session_id: str) -> str:
         """Generate a story for a specific session of a user."""
         try:
             session_data = memory_service.get_user_memories(user_id, session_id)
@@ -22,15 +22,36 @@ class NarrativeEngine:
 
             phase = memory_service.get_phase(user_id, session_id).capitalize()
             
-            qa_text = f"--- {phase.upper()} (Session: {session_id}) ---\n"
+            qa_text = ""
             for category, memories in session_data.items():
-                qa_text += f"\n[{category.upper()}]\n"
                 for m in memories:
-                    question = m.get("question", "No question")
-                    response = m.get("response", "No response")
-                    qa_text += f"Q: {question}\nA: {response}\n"
+                    if m.get("response"):
+                        qa_text += f"Q: {m.get('question', '')}\nA: {m.get('response', '')}\n\n"
 
-            return f"Story for {phase} phase:\n\n{qa_text}"
+            prompt = f"""
+You are an empathetic biographer writing a beautiful life story.
+Convert the following Q&A format into a flowing, natural narrative story.
+Keep the tone authentic, warm, and emotionally engaging.
+
+Life Phase: {phase}
+
+Q&A:
+{qa_text}
+
+Write in first person, as if the person is narrating their own memory.
+Make it read like a story, not an interview.
+"""
+
+            response = await client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are a compassionate storyteller who transforms conversations into beautiful narratives."},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.7,
+            )
+
+            return response.choices[0].message.content.strip()
             
         except Exception as e:
             return f"Error: {str(e)}"
