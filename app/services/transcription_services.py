@@ -13,8 +13,8 @@ async def transcribe_audio(audio_file):
         temp_audio_path= temp_audio.name 
 
     transcript = client.audio.transcriptions.create(
-        model = "gpt=40-mini-transcribe",
-        file= open(temp_audio_path, "rb"),
+        model="gpt-4o-mini-transcribe",
+        file=open(temp_audio_path, "rb"),
     )
 
-    return transcript.text
+    return transcript.text    
