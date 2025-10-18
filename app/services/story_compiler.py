@@ -13,27 +13,19 @@ class StoryCompiler:
     def __init__(self):
         self.story_file = "story_map.json"
 
-    def compile_full_story(self, user_id: str) -> dict:
-        """Generate and save a complete storybook for a given user."""
-        user_memories = memory_service.get_user_memories(user_id)
-        if not user_memories:
-            return {"error": "No memories found for this user."}
+    def compile_full_story(self, user_id: str, session_id: str) -> dict:
+        """Generate and save a complete storybook for a given user session."""
+        session_memories = memory_service.get_user_memories(user_id, session_id)
+        if not session_memories:
+            return {"error": "No memories found for this user session."}
 
-        story_map = {}
-        compiled_story = []
-
-        for phase in user_memories.keys():
-            chapter_text = narrative_engine.generate_chapter(user_id, phase)
-            story_map[phase] = chapter_text
-            compiled_story.append(f"## {phase.title()}\n\n{chapter_text}\n")
-
-        full_story_text = "\n---\n".join(compiled_story)
+        story_text = narrative_engine.generate_session_story(user_id, session_id)
         story_data = {
             "user_id": user_id,
-            "title": f"The Story of {user_id}",
+            "session_id": session_id,
+            "title": f"The Story of {user_id} - Session {session_id}",
             "created_at": datetime.utcnow().isoformat(),
-            "chapters": story_map,
-            "full_story": full_story_text
+            "story": story_text
         }
 
         self._save_story(story_data)
@@ -47,7 +39,8 @@ class StoryCompiler:
         else:
             existing = {}
 
-        existing[story_data["user_id"]] = story_data
+        key = f"{story_data['user_id']}_{story_data['session_id']}"
+        existing[key] = story_data
 
         with open(self.story_file, "w") as f:
             json.dump(existing, f, indent=2)

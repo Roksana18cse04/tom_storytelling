@@ -170,7 +170,12 @@ class MemoryService:
 
     # ─── Phase Handling ───────────────────────────
     def get_phase(self, user_id: str, session_id: str) -> str:
-        return self.user_phase.get(user_id, {}).get(session_id, "childhood")
+        if user_id not in self.user_phase:
+            self.user_phase[user_id] = {}
+        if session_id not in self.user_phase[user_id]:
+            self.user_phase[user_id][session_id] = "childhood"
+            self._save_memory()
+        return self.user_phase[user_id][session_id]
 
     def set_phase(self, user_id: str, session_id: str, phase: str):
         self.user_phase.setdefault(user_id, {})[session_id] = phase
@@ -202,7 +207,7 @@ class MemoryService:
             "photos": photos,
             "audio_clips": audio_clips,
             "contributors": contributors,
-            "timestamp": datetime.datetime.utcnow().isoformat()
+            "timestamp": datetime.datetime.now().isoformat()
         }
 
         self.memory_map.setdefault(user_id, {}).setdefault(session_id, {}).setdefault(category, []).append(entry)

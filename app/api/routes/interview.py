@@ -107,7 +107,7 @@ async def interview(
             response=text,
         )
 
-        followup = llm.generate_followup(user_id, session_id, text)
+        followup = await llm.generate_followup(user_id, session_id, text)
         return {"response": followup}
 
     except Exception as e:

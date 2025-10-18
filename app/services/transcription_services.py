@@ -6,7 +6,6 @@ from app.core.config import settings
 client=OpenAI(api_key= settings.openai_api_key)
 
 
-
 async def transcribe_audio(audio_file):
     with tempfile.NamedTemporaryFile(delete= False, suffix= ".mp3") as temp_audio:
         content = await audio_file.read()
