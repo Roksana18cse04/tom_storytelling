@@ -74,8 +74,324 @@
             "timestamp": "2025-10-14T23:32:49.382300"
           }
         ]
+      },
+      "123": {
+        "childhood": [
+          {
+            "id": "a0c8e142-ad03-4823-ae65-10bf977f0bad",
+            "question": "Free Talk",
+            "response": "I want to shear my life-story",
+            "snippet": "I want to shear my life-story",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:25:41.107521"
+          },
+          {
+            "id": "b0dab2b5-40e6-4b6b-b933-a3523c88d36b",
+            "question": "Free Talk",
+            "response": "I want to shear my life-story",
+            "snippet": "I want to shear my life-story",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:26:30.747056"
+          },
+          {
+            "id": "ef7f85da-8adf-43db-b2ac-bbc918e37320",
+            "question": "Free Talk",
+            "response": "I want to shear my life-story",
+            "snippet": "I want to shear my life-story",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:26:55.714085"
+          },
+          {
+            "id": "8616709e-0f5b-44f9-a8a5-d37b35910f90",
+            "question": "Free Talk",
+            "response": "I want to shear my life-story",
+            "snippet": "I want to shear my life-story",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:26:57.544959"
+          },
+          {
+            "id": "77d3398c-1461-4e83-bcac-8fd1408c194e",
+            "question": "Free Talk",
+            "response": "I want to shear my life-story",
+            "snippet": "I want to shear my life-story",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:27:36.573107"
+          },
+          {
+            "id": "32389c4c-410a-4588-a59f-e3ef9f8746e8",
+            "question": "Free Talk",
+            "response": "I want to shear my life-story",
+            "snippet": "I want to shear my life-story",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:27:51.816425"
+          },
+          {
+            "id": "bcfd6e90-5b2d-4378-bcbd-5a6cea2aa3e5",
+            "question": "Free Talk",
+            "response": "I want to shear my life-story",
+            "snippet": "I want to shear my life-story",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:28:30.949637"
+          },
+          {
+            "id": "fd67fce3-6903-44a8-942d-d11b3c4d9c41",
+            "question": "Free Talk",
+            "response": "I want to shear my life-story",
+            "snippet": "I want to shear my life-story",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:31:04.345279"
+          },
+          {
+            "id": "7da52709-dd5c-44dd-8c6b-cb9232a458a4",
+            "question": "Free Talk",
+            "response": "I want to shear my life-story",
+            "snippet": "I want to shear my life-story",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:31:14.943425"
+          },
+          {
+            "id": "449ddef5-7f3e-49ef-b1cc-5dc244508b19",
+            "question": "Free Talk",
+            "response": "I want to shear my life-story",
+            "snippet": "I want to shear my life-story",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:31:15.731403"
+          },
+          {
+            "id": "df8eac41-8059-49f0-8f05-65259776a481",
+            "question": "Free Talk",
+            "response": "I want to shear my life-story",
+            "snippet": "I want to shear my life-story",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:31:15.903407"
+          }
+        ]
+      }
+    },
+    "s123": {
+      "123": {
+        "childhood": [
+          {
+            "id": "1a9cdfac-814d-46bb-bd32-32bd0d8a175d",
+            "question": "Free Talk",
+            "response": "I want to go with my lifestory",
+            "snippet": "I want to go with my lifestory",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:13:47.503991"
+          },
+          {
+            "id": "e36d4ba8-23e8-4cf9-a8cc-16d6c2f1d327",
+            "question": "Free Talk",
+            "response": "I want to go with my lifestory",
+            "snippet": "I want to go with my lifestory",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:14:00.056535"
+          },
+          {
+            "id": "ae8b7e07-08a6-497d-a56c-d12e378e6e7d",
+            "question": "Free Talk",
+            "response": "I want to go with my lifestory",
+            "snippet": "I want to go with my lifestory",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:24:16.729089"
+          },
+          {
+            "id": "0498b5ed-badc-4426-81dc-1bd39ad135ca",
+            "question": "Free Talk",
+            "response": "I want to go with my lifestory",
+            "snippet": "I want to go with my lifestory",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:24:20.530032"
+          }
+        ]
+      }
+    },
+    "123": {
+      "1": {
+        "childhood": [
+          {
+            "id": "cdecc243-ce0e-4fb3-9d8e-5764a16f7895",
+            "question": "Free Talk",
+            "response": "I want to generate my life story",
+            "snippet": "I want to generate my life story",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:34:47.864797"
+          },
+          {
+            "id": "ed3c1bf6-38bd-4304-9fda-abf45bd8de98",
+            "question": "Free Talk",
+            "response": "I want to generate my life story",
+            "snippet": "I want to generate my life story",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:38:04.170373"
+          }
+        ]
+      },
+      "12": {
+        "childhood": [
+          {
+            "id": "55729919-9058-4bb1-91eb-82f253df05e9",
+            "question": "Free Talk",
+            "response": "I want to create a story based on my ife",
+            "snippet": "I want to create a story based on my ife",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:39:05.313287"
+          }
+        ]
+      }
+    },
+    "abc123": {
+      "s12": {
+        "childhood": [
+          {
+            "id": "6dcbb5d4-0c66-4acd-97f0-f1df6b2ee6f9",
+            "question": "Free Talk",
+            "response": "I want to create a story based on my ife",
+            "snippet": "I want to create a story based on my ife",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:40:32.848411"
+          },
+          {
+            "id": "52c81f6b-a24d-4154-8974-042b45ddee41",
+            "question": "Free Talk",
+            "response": "I want to create a story based on my ife",
+            "snippet": "I want to create a story based on my ife",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T05:43:01.803985"
+          },
+          {
+            "id": "20918308-ce89-4abf-8498-1b9cbe8ed3e0",
+            "question": "Free Talk",
+            "response": "I want to create a story based on my ife",
+            "snippet": "I want to create a story based on my ife",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T11:47:09.798636"
+          },
+          {
+            "id": "6fe233db-64cf-4b3c-997f-c0a1cf540f47",
+            "question": "Free Talk",
+            "response": "I want to create a story based on my ife",
+            "snippet": "I want to create a story based on my ife",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T11:47:26.094049"
+          },
+          {
+            "id": "f3d51832-5164-4b7a-8941-1767fc836683",
+            "question": "Free Talk",
+            "response": "I want to create a story based on my ife",
+            "snippet": "I want to create a story based on my ife",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T11:49:55.061984"
+          },
+          {
+            "id": "fdff177b-3a2a-47d7-9b5b-b906db88a36c",
+            "question": "What\u2019s one of the first memories you can recall from your childhood that stands out to you?",
+            "response": "",
+            "snippet": "",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T11:49:57.221738"
+          }
+        ],
+        "photo_story": [
+          {
+            "id": "742660db-4e3a-499c-8261-5e1042b085fb",
+            "question": "What does this photo remind you of, and what story or memory does it evoke for you?",
+            "response": "",
+            "snippet": "",
+            "photos": [
+              "C:\\Users\\S.Soudeep\\Documents\\tom_storytelling\\user_images\\4434edf5-7f5b-4d10-8a5e-2814dafb756f_wedding-photo-ideas_studio_n_photography.jpg"
+            ],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-16T11:54:32.290194"
+          }
+        ]
+      },
+      "s123": {
+        "childhood": [
+          {
+            "id": "3a877e41-ceca-4e68-9fbb-f24721015f75",
+            "question": "Free Talk",
+            "response": "In rainy day, I collected the mango",
+            "snippet": "In rainy day, I collected the mango",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-18T09:18:02.193042"
+          },
+          {
+            "id": "cbbbca88-baef-4cad-9517-ca7f1db42a15",
+            "question": "What was it like for you to collect mangoes on a rainy day? Did you enjoy that experience, and what did you do with the mangoes afterward?",
+            "response": "",
+            "snippet": "",
+            "photos": [],
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-18T09:18:06.117205"
+          }
+        ]
       }
     }
   },
-  "user_phase": {}
+  "user_phase": {
+    "abc": {
+      "123": "childhood"
+    },
+    "123": {
+      "1": "childhood",
+      "12": "childhood"
+    },
+    "abc123": {
+      "s12": "childhood",
+      "s123": "childhood"
+    }
+  }
 }
