@@ -53,6 +53,48 @@ class PhotoService:
             logger.exception("Failed to analyze image.")
             return "Could not generate a question from this photo."
 
+    async def generate_caption(self, user_story: str, file_path: str = None) -> str:
+        """
+        Generate a concise caption for the photo based on user's story.
+        """
+        try:
+            prompt = f"""
+            Based on the following story about a photo, generate a SHORT, meaningful caption (max 10-15 words).
+            
+            User's story:
+            {user_story}
+            
+            Caption should:
+            - Be concise and descriptive
+            - Include key details (year, people, place, event)
+            - Feel warm and personal
+            - Be suitable for a life story book
+            
+            Examples:
+            - "Wedding day, 1995 - A rainy celebration with my brother"
+            - "First day of school, excited to meet new friends"
+            - "Family trip to London, summer of 2005"
+            
+            Generate ONLY the caption text, nothing else.
+            """
+
+            response = await client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "You are a caption writer for life story books."},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.5,
+            )
+
+            caption = response.choices[0].message.content.strip()
+            return caption
+
+        except Exception:
+            logger.exception("Failed to generate caption.")
+            return "Untitled memory"
+
+
 
 # Singleton instance
 photo_service = PhotoService()
