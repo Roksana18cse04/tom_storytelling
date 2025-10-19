@@ -3,12 +3,16 @@ from fastapi import APIRouter, UploadFile, Form, HTTPException
 from app.services.llm_services import LLMService
 from app.services.transcription_services import transcribe_audio
 from app.services.memory_services import memory_service
+from app.questions.questions import QUESTION_BANK
 from typing import Optional
 import logging
 
 router = APIRouter()
 llm = LLMService()
 logger = logging.getLogger(__name__)
+
+# Default minimum questions for phases without defined question bank
+DEFAULT_MIN_QUESTIONS = 5
 
 @router.post("/")
 async def interview(
@@ -23,15 +27,74 @@ async def interview(
         if not text:
             raise HTTPException(status_code=400, detail="Either text or audio must be provided.")
 
+        # Get or detect initial phase
         category = memory_service.get_phase(user_id, session_id)
+        if category is None:
+            # First interaction - detect phase from user input
+            category = memory_service.detect_initial_phase(text)
+            if category == "ASK_USER":
+                # Ask user to choose their preferred phase
+                return {
+                    "response": "That sounds wonderful! Which part of your life would you like to share about?\n\n"
+                                "1. Childhood (early years, family, school)\n"
+                                "2. Teenage years (high school, friendships)\n"
+                                "3. Early adulthood (university, first jobs)\n"
+                                "4. Career & work life\n"
+                                "5. Relationships & family\n"
+                                "6. Hobbies & adventures (travel, interests)\n"
+                                "7. Later life & reflections\n\n"
+                                "You can simply tell me the number or name of the phase.",
+                    "awaiting_phase_selection": True,
+                    "current_category": None
+                }
+            memory_service.set_phase(user_id, session_id, category)
+        else:
+            # Existing session - check if user is talking about different stage
+            detected_stage = llm._detect_life_stage(text)
+            if detected_stage and detected_stage != category:
+                memory_service.set_phase(user_id, session_id, detected_stage)
+                category = detected_stage
         user_data = memory_service.get_user_memories(user_id, session_id)
+        
+        # Handle phase selection from user
+        phase_map = {
+            "1": "childhood", "childhood": "childhood",
+            "2": "teenage years", "teenage": "teenage years", "teen": "teenage years",
+            "3": "early adulthood", "early adult": "early adulthood", "adulthood": "early adulthood",
+            "4": "career work", "career": "career work", "work": "career work",
+            "5": "relationships & family", "relationship": "relationships & family", "family": "relationships & family",
+            "6": "hobbies & adventures", "hobbies": "hobbies & adventures", "hobby": "hobbies & adventures", "adventure": "hobbies & adventures",
+            "7": "later life & reflections", "later life": "later life & reflections", "reflection": "later life & reflections"
+        }
+        
+        text_lower = text.lower().strip()
+        if category is None and text_lower in phase_map:
+            category = phase_map[text_lower]
+            memory_service.set_phase(user_id, session_id, category)
+            return {
+                "response": f"Wonderful! Let's explore your {category.replace('_', ' ')}. What would you like to share first?",
+                "current_category": category,
+                "phase_selected": True
+            }
+        
+        # Check for unanswered question
         last_question = None
+        has_unanswered = False
         if category in user_data and user_data[category]:
             for mem in reversed(user_data[category]):
                 if mem["question"] and not mem["response"]:
                     last_question = mem["question"]
+                    has_unanswered = True
                     user_data[category].remove(mem)
                     break
+        
+        # If returning user with unanswered question, remind them
+        if has_unanswered and text.lower().strip() in ["hi", "hello", "hey"]:
+            return {
+                "response": f"Welcome back! Your last question was: \"{last_question}\" but you didn't answer this. Please answer this question.",
+                "current_category": category,
+                "is_reminder": True
+            }
 
         memory_service.add_memory(
             user_id=user_id,
@@ -41,8 +104,42 @@ async def interview(
             response=text,
         )
 
+        # Check if current phase has enough responses
+        answered_count = len([m for m in user_data.get(category, []) if m["response"].strip()])
+        
+        # Get threshold for current phase
+        phase_threshold = len(QUESTION_BANK[category]["questions"]) if category in QUESTION_BANK else DEFAULT_MIN_QUESTIONS
+        
+        # Auto-advance to next phase if threshold met
+        should_advance = False
+        if answered_count >= phase_threshold:
+            all_phases = list(QUESTION_BANK.keys())
+            current_index = all_phases.index(category)
+            if current_index + 1 < len(all_phases):
+                next_phase = all_phases[current_index + 1]
+                memory_service.set_phase(user_id, session_id, next_phase)
+                should_advance = True
+                category = next_phase
+        
         followup = await llm.generate_followup(user_id, session_id, text)
-        return {"response": followup}
+        
+        # Get updated category after followup (in case it changed)
+        updated_category = memory_service.get_phase(user_id, session_id)
+        
+        response_data = {
+            "response": followup,
+            "current_category": updated_category,
+            "memory_saved": True,
+            "answered_in_phase": answered_count
+        }
+        
+        # Add phase transition message if advanced
+        if should_advance:
+            phase_name = updated_category.replace("_", " ").title()
+            response_data["phase_transition"] = True
+            response_data["response"] = f"That's wonderful. We've covered quite a bit about that time in your life. Now, let's move on to {phase_name}. {followup}"
+        
+        return response_data
 
     except Exception as e:
         logger.exception("Interview processing failed.")

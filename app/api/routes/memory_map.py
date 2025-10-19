@@ -8,6 +8,59 @@ from app.services.memory_services import memory_service
 router = APIRouter()
 
 
+# Specific routes FIRST (to avoid path conflicts)
+@router.get("/progress/{user_id}/{session_id}")
+async def get_progress(user_id: str, session_id: str):
+    """
+    Get completion progress for all categories and overall percentage.
+    """
+    progress = memory_service.get_progress(user_id, session_id)
+    overall = memory_service.get_overall_progress(user_id, session_id)
+    gaps = memory_service.detect_gaps(user_id, session_id)
+    richest = memory_service.get_richest_categories(user_id, session_id)
+    
+    return {
+        "user_id": user_id,
+        "session_id": session_id,
+        "overall_progress": overall,
+        "category_progress": progress,
+        "gaps": gaps,
+        "richest_categories": [{
+            "category": cat,
+            "progress": prog
+        } for cat, prog in richest]
+    }
+
+
+@router.get("/related/{user_id}/{session_id}/{memory_id}")
+async def get_related_memories(user_id: str, session_id: str, memory_id: str):
+    """
+    Find memories related to a specific memory based on common keywords.
+    """
+    related = memory_service.find_related_memories(user_id, session_id, memory_id)
+    return {
+        "user_id": user_id,
+        "session_id": session_id,
+        "memory_id": memory_id,
+        "related_memories": related
+    }
+
+
+@router.get("/threads/{user_id}/{session_id}")
+async def get_story_threads(user_id: str, session_id: str):
+    """
+    Detect recurring themes, people, or places across different life stages.
+    """
+    threads = memory_service.detect_story_threads(user_id, session_id)
+    return {
+        "user_id": user_id,
+        "session_id": session_id,
+        "story_threads": threads
+    }
+
+
+
+# Generic routes AFTER
 @router.get("/{user_id}")
 async def get_user_memory_map(user_id: str):
     """
