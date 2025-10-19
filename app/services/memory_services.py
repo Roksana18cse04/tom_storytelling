@@ -32,13 +32,48 @@ class MemoryService:
         if user_id not in self.user_phase:
             self.user_phase[user_id] = {}
         if session_id not in self.user_phase[user_id]:
-            self.user_phase[user_id][session_id] = "childhood"
-            self._save_memory()
+            self.user_phase[user_id][session_id] = None  # No default phase
         return self.user_phase[user_id][session_id]
 
     def set_phase(self, user_id: str, session_id: str, phase: str):
         self.user_phase.setdefault(user_id, {})[session_id] = phase
         self._save_memory()
+
+    def detect_initial_phase(self, text: str) -> str:
+        """Detect appropriate starting phase from user's first input."""
+        text_lower = text.lower()
+        
+        # Check if user wants to be asked about phase preference
+        vague_intents = ["share", "tell", "talk about", "memory", "story", "life"]
+        if any(intent in text_lower for intent in vague_intents) and len(text.split()) < 10:
+            return "ASK_USER"  # Signal to ask user for phase preference
+        
+        # Age detection
+        age_match = re.search(r'\b(\d{1,2})\s*(?:years?|yrs?)\s*old\b', text_lower)
+        if age_match:
+            age = int(age_match.group(1))
+            if age <= 12: return "childhood"
+            if age <= 19: return "teenage years"
+            if age <= 30: return "early adulthood"
+            if age <= 50: return "career work"
+            return "later life & reflections"
+        
+        # Life stage keywords
+        stage_map = {
+            "childhood": ["child", "kid", "young", "elementary", "primary school", "grew up", "born"],
+            "teenage years": ["teenage", "teen", "high school", "secondary", "adolescent"],
+            "early adulthood": ["university", "college", "first job", "twenties", "young adult"],
+            "career work": ["career", "work", "job", "professional", "employed", "business"],
+            "relationships & family": ["married", "wedding", "spouse", "children", "parent"],
+            "hobbies & adventures": ["travel", "trip", "journey", "vacation", "adventure", "hobby", "visited"],
+            "later life & reflections": ["retired", "retirement", "grandchildren", "looking back"]
+        }
+        
+        for phase, keywords in stage_map.items():
+            if any(kw in text_lower for kw in keywords):
+                return phase
+        
+        return "ASK_USER"  # Ask user if nothing detected
 
     # ─── Helper ───────────────────────────────────
     def _generate_snippet(self, response: str, max_length: int = 120) -> str:

@@ -112,7 +112,9 @@ class LLMService:
             "early adulthood": ["early adult", "young adult", "university", "college", "first job", "twenties"],
             "career work": ["career", "work", "job", "professional", "office", "business", "employed"],
             "relationships & family": ["married", "wedding", "spouse", "partner", "children", "parent", "family life"],
-            "hobbies & adventures": ["travel", "hobby", "adventure", "trip", "vacation", "journey"],
+            "hobbies & adventures": ["travel", "hobby", "adventure", "trip", "vacation", "journey", "visited", "tour"],
+            "home & community": ["moved", "neighborhood", "community", "hometown", "lived in"],
+            "challenges & growth": ["difficult", "struggle", "overcome", "challenge", "hardship"],
             "later life & reflections": ["retired", "retirement", "grandchildren", "looking back", "reflection"]
         }
         

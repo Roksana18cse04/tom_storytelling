@@ -27,13 +27,55 @@ async def interview(
         if not text:
             raise HTTPException(status_code=400, detail="Either text or audio must be provided.")
 
-        # Detect life stage from user's response
-        detected_stage = llm._detect_life_stage(text)
-        if detected_stage:
-            memory_service.set_phase(user_id, session_id, detected_stage)
-        
+        # Get or detect initial phase
         category = memory_service.get_phase(user_id, session_id)
+        if category is None:
+            # First interaction - detect phase from user input
+            category = memory_service.detect_initial_phase(text)
+            if category == "ASK_USER":
+                # Ask user to choose their preferred phase
+                return {
+                    "response": "That sounds wonderful! Which part of your life would you like to share about?\n\n"
+                                "1. Childhood (early years, family, school)\n"
+                                "2. Teenage years (high school, friendships)\n"
+                                "3. Early adulthood (university, first jobs)\n"
+                                "4. Career & work life\n"
+                                "5. Relationships & family\n"
+                                "6. Hobbies & adventures (travel, interests)\n"
+                                "7. Later life & reflections\n\n"
+                                "You can simply tell me the number or name of the phase.",
+                    "awaiting_phase_selection": True,
+                    "current_category": None
+                }
+            memory_service.set_phase(user_id, session_id, category)
+        else:
+            # Existing session - check if user is talking about different stage
+            detected_stage = llm._detect_life_stage(text)
+            if detected_stage and detected_stage != category:
+                memory_service.set_phase(user_id, session_id, detected_stage)
+                category = detected_stage
         user_data = memory_service.get_user_memories(user_id, session_id)
+        
+        # Handle phase selection from user
+        phase_map = {
+            "1": "childhood", "childhood": "childhood",
+            "2": "teenage years", "teenage": "teenage years", "teen": "teenage years",
+            "3": "early adulthood", "early adult": "early adulthood", "adulthood": "early adulthood",
+            "4": "career work", "career": "career work", "work": "career work",
+            "5": "relationships & family", "relationship": "relationships & family", "family": "relationships & family",
+            "6": "hobbies & adventures", "hobbies": "hobbies & adventures", "hobby": "hobbies & adventures", "adventure": "hobbies & adventures",
+            "7": "later life & reflections", "later life": "later life & reflections", "reflection": "later life & reflections"
+        }
+        
+        text_lower = text.lower().strip()
+        if category is None and text_lower in phase_map:
+            category = phase_map[text_lower]
+            memory_service.set_phase(user_id, session_id, category)
+            return {
+                "response": f"Wonderful! Let's explore your {category.replace('_', ' ')}. What would you like to share first?",
+                "current_category": category,
+                "phase_selected": True
+            }
         
         # Check for unanswered question
         last_question = None
