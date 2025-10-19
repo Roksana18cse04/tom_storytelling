@@ -46,13 +46,16 @@ Style: {style_desc}
 Q&A:
 {qa_text}
 
-Instructions:
+CRITICAL Instructions:
+- ONLY use information explicitly provided in the Q&A above
+- DO NOT add fictional details, dates, places, names, or events
+- DO NOT make assumptions or create stories beyond what the user shared
+- If information is minimal, write a SHORT chapter based ONLY on what's provided
 - Write in first person ("I was born...")
 - Remove filler words but keep the person's authentic voice
 - Connect memories naturally with transitions
 - Make it read like a story, not an interview
 - Keep it warm and emotionally engaging
-- Preserve specific details (names, places, dates)
 """
 
             response = await client.chat.completions.create(
