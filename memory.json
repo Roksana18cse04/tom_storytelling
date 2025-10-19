@@ -295,6 +295,102 @@
           }
         ]
       }
+    },
+    "user_34": {
+      "session_34": {
+        "early adulthood": [
+          {
+            "id": "b49b1e28-ddc6-4375-87da-f62320998a92",
+            "question": "Free Talk",
+            "response": "I want to shear my early adulthood memory with you.",
+            "snippet": "I want to shear my early adulthood memory with you.",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-19T15:42:45.984727"
+          },
+          {
+            "id": "1879e8a1-4728-4eac-8749-a9369811f0c1",
+            "question": "What specific memories stand out for you from that time, perhaps moments that shaped who you are today?",
+            "response": "In that time I was admitted in the unicerstiy. i was too much excited for this.",
+            "snippet": "In that time I was admitted in the unicerstiy.",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-19T15:43:41.265310"
+          },
+          {
+            "id": "d98835a3-e9b8-43c4-8ed4-7567ad49f0d7",
+            "question": "What was it like for you when you first arrived at university, and how did that excitement transform into your everyday experiences there?",
+            "response": "At first it was exciting but sudden I don't feel good as I had no friend in that time.",
+            "snippet": "At first it was exciting but sudden I don't feel good as I had no friend in that time.",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-19T15:44:33.688916"
+          },
+          {
+            "id": "bdf5119c-02fb-46be-8156-dc94b08f8d9c",
+            "question": "How did you cope with feeling lonely at university, and did anything help you to connect with others over time?",
+            "response": "Than, I meet a girl who is beautiful and talented. She helped me a lot.",
+            "snippet": "Than, I meet a girl who is beautiful and talented.",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-19T15:45:21.683004"
+          },
+          {
+            "id": "e8a2f371-7024-4c6d-9da0-d0089c27c5eb",
+            "question": "What was it about her that made such a difference for you during that time?",
+            "response": "We started spending time together and study together ",
+            "snippet": "We started spending time together and study together",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-19T15:45:49.472205"
+          },
+          {
+            "id": "a4b56164-eed5-4319-9ffe-ea679869ae98",
+            "question": "What were some of the things you enjoyed studying together, and how did that help strengthen your friendship?",
+            "response": "Which thing I am not good she helped me when she can't anything I helped her. By taking course together.",
+            "snippet": "Which thing I am not good she helped me when she can't anything I helped her.",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-19T15:46:35.728336"
+          },
+          {
+            "id": "22a3f2ad-a7e6-48fb-8ab0-c57a799fe96e",
+            "question": "What subjects did you find most challenging or enjoyable while studying together, and how did those experiences shape your view of learning?",
+            "response": "I hate the EEE courses. I didn't understand to much but my best friend helped me a lot in that subjects",
+            "snippet": "I hate the EEE courses.",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-19T15:48:05.097703"
+          }
+        ],
+        "career work": [
+          {
+            "id": "e3b7c9a2-46b4-48a0-8bed-4063afe71c87",
+            "question": "What was it about your friend's support that made a difference in your understanding of those challenging EEE courses?",
+            "response": "",
+            "snippet": "",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-19T15:48:06.238678"
+          }
+        ]
+      }
     }
   },
   "user_phase": {
@@ -325,6 +421,9 @@
     },
     "user33": {
       "session33": "hobbies & adventures"
+    },
+    "user_34": {
+      "session_34": "career work"
     }
   }
 }

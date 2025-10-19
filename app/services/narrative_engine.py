@@ -25,9 +25,12 @@ class NarrativeEngine:
                 return f"No memories found for {category}."
 
             qa_text = ""
+            photo_info = ""
             for m in memories:
                 if m.get("response", "").strip():
                     qa_text += f"Q: {m.get('question', '')}\nA: {m.get('response', '')}\n\n"
+                    if m.get("photo_caption"):
+                        photo_info += f"[Photo Caption: {m.get('photo_caption')}]\n"
 
             if not qa_text.strip():
                 return f"No answered questions in {category}."
@@ -35,6 +38,8 @@ class NarrativeEngine:
             style_desc = self.styles.get(style, self.styles["memoir"])
             chapter_title = category.replace("_", " ").title()
 
+            photo_section = f"\n\nPhotos in this chapter:\n{photo_info}" if photo_info else ""
+            
             prompt = f"""
 You are a compassionate biographer writing a beautiful life story.
 
@@ -44,13 +49,14 @@ Chapter: {chapter_title}
 Style: {style_desc}
 
 Q&A:
-{qa_text}
+{qa_text}{photo_section}
 
 CRITICAL Instructions:
 - ONLY use information explicitly provided in the Q&A above
 - DO NOT add fictional details, dates, places, names, or events
 - DO NOT make assumptions or create stories beyond what the user shared
 - If information is minimal, write a SHORT chapter based ONLY on what's provided
+- If there are photo captions, naturally reference them in the story and include the caption as: [Photo: "caption text"]
 - Write in first person ("I was born...")
 - Remove filler words but keep the person's authentic voice
 - Connect memories naturally with transitions

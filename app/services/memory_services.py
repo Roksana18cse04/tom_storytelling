@@ -43,10 +43,25 @@ class MemoryService:
         """Detect appropriate starting phase from user's first input."""
         text_lower = text.lower()
         
-        # Check if user wants to be asked about phase preference
+        # Life stage keywords (check FIRST before vague intent check)
+        stage_map = {
+            "childhood": ["child", "kid", "young", "elementary", "primary school", "grew up", "born"],
+            "teenage years": ["teenage", "teen", "high school", "secondary", "adolescent"],
+            "early adulthood": ["university", "college", "first job", "twenties", "young adult", "early adult"],
+            "career work": ["career", "work", "job", "professional", "employed", "business"],
+            "relationships & family": ["married", "wedding", "spouse", "children", "parent"],
+            "hobbies & adventures": ["travel", "trip", "journey", "vacation", "adventure", "hobby", "visited"],
+            "later life & reflections": ["retired", "retirement", "grandchildren", "looking back"]
+        }
+        
+        for phase, keywords in stage_map.items():
+            if any(kw in text_lower for kw in keywords):
+                return phase
+        
+        # Check if user wants to be asked about phase preference (only if no stage detected)
         vague_intents = ["share", "tell", "talk about", "memory", "story", "life"]
         if any(intent in text_lower for intent in vague_intents) and len(text.split()) < 10:
-            return "ASK_USER"  # Signal to ask user for phase preference
+            return "ASK_USER"
         
         # Age detection
         age_match = re.search(r'\b(\d{1,2})\s*(?:years?|yrs?)\s*old\b', text_lower)
@@ -57,21 +72,6 @@ class MemoryService:
             if age <= 30: return "early adulthood"
             if age <= 50: return "career work"
             return "later life & reflections"
-        
-        # Life stage keywords
-        stage_map = {
-            "childhood": ["child", "kid", "young", "elementary", "primary school", "grew up", "born"],
-            "teenage years": ["teenage", "teen", "high school", "secondary", "adolescent"],
-            "early adulthood": ["university", "college", "first job", "twenties", "young adult"],
-            "career work": ["career", "work", "job", "professional", "employed", "business"],
-            "relationships & family": ["married", "wedding", "spouse", "children", "parent"],
-            "hobbies & adventures": ["travel", "trip", "journey", "vacation", "adventure", "hobby", "visited"],
-            "later life & reflections": ["retired", "retirement", "grandchildren", "looking back"]
-        }
-        
-        for phase, keywords in stage_map.items():
-            if any(kw in text_lower for kw in keywords):
-                return phase
         
         return "ASK_USER"  # Ask user if nothing detected
 
