@@ -23,25 +23,22 @@ class PhotoService:
             with open(file_path, "rb") as f:
                 image_b64 = base64.b64encode(f.read()).decode("utf-8")
 
-            prompt = f"""
-            You are a compassionate British interviewer, skilled at analyzing photos to inspire storytelling.
-            The user has uploaded a meaningful photo.
-
-            Analyze the content of the photo (represented as base64) and imagine what it could depict
-            (e.g., a family gathering, childhood event, trip, friendship, celebration, etc.).
-
-            Base64 (for model reference only): {image_b64[:500]}...
-
-            Generate ONE thoughtful, open-ended question that encourages the user
-            to tell a story or memory related to this photo.
-            Respond ONLY with the question text.
-            """
-
             response = await client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o",
                 messages=[
-                    {"role": "system", "content": "You are a thoughtful interviewer."},
-                    {"role": "user", "content": prompt},
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "You are a compassionate British interviewer. Analyze this photo and generate ONE thoughtful, open-ended question that encourages the user to tell a story or memory related to it. Respond ONLY with the question text."
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": f"data:image/jpeg;base64,{image_b64}"}
+                            }
+                        ]
+                    }
                 ],
                 temperature=0.6,
             )
@@ -58,34 +55,37 @@ class PhotoService:
         Generate a concise caption for the photo based on user's story.
         """
         try:
-            prompt = f"""
-            Based on the following story about a photo, generate a SHORT, meaningful caption (max 10-15 words).
-            
-            User's story:
-            {user_story}
-            
-            Caption should:
-            - Be concise and descriptive
-            - Include key details (year, people, place, event)
-            - Feel warm and personal
-            - Be suitable for a life story book
-            
-            Examples:
-            - "Wedding day, 1995 - A rainy celebration with my brother"
-            - "First day of school, excited to meet new friends"
-            - "Family trip to London, summer of 2005"
-            
-            Generate ONLY the caption text, nothing else.
-            """
-
-            response = await client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": "You are a caption writer for life story books."},
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0.5,
-            )
+            if file_path:
+                with open(file_path, "rb") as f:
+                    image_b64 = base64.b64encode(f.read()).decode("utf-8")
+                
+                response = await client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": f"Analyze this photo and the user's story to generate a SHORT, meaningful caption (max 10-15 words). Include key details like year, people, place, or event if mentioned.\n\nUser's story: {user_story}\n\nGenerate ONLY the caption text."
+                                },
+                                {
+                                    "type": "image_url",
+                                    "image_url": {"url": f"data:image/jpeg;base64,{image_b64}"}
+                                }
+                            ]
+                        }
+                    ],
+                    temperature=0.5,
+                )
+            else:
+                response = await client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {"role": "user", "content": f"Generate a SHORT caption (max 10-15 words) based on this story: {user_story}"}
+                    ],
+                    temperature=0.5,
+                )
 
             caption = response.choices[0].message.content.strip()
             return caption
