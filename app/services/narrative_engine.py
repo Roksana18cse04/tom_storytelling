@@ -25,16 +25,32 @@ class NarrativeEngine:
                 return f"No memories found for {category}."
 
             qa_text = ""
+            photo_info = ""
+            has_substantial_content = False
+            
             for m in memories:
-                if m.get("response", "").strip():
-                    qa_text += f"Q: {m.get('question', '')}\nA: {m.get('response', '')}\n\n"
+                response = m.get("response", "").strip()
+                if response:
+                    qa_text += f"Q: {m.get('question', '')}\nA: {response}\n\n"
+                    # Check if response has substantial content (more than just photo description)
+                    if len(response.split()) > 5:
+                        has_substantial_content = True
+                    if m.get("photo_caption"):
+                        photo_path = m.get('photos', [None])[0]
+                        photo_info += f"[Photo Caption: {m.get('photo_caption')}]\n[Photo Path: {photo_path}]\n"
 
-            if not qa_text.strip():
-                return f"No answered questions in {category}."
+            if not qa_text.strip() or not has_substantial_content:
+                return f"No substantial content in {category}."
 
             style_desc = self.styles.get(style, self.styles["memoir"])
             chapter_title = category.replace("_", " ").title()
 
+            photo_section = f"\n\nPhotos in this chapter:\n{photo_info}" if photo_info else ""
+            
+            # Debug: Check if photo info is collected
+            if photo_info:
+                print(f"DEBUG: Photo captions found: {photo_info}")
+            
             prompt = f"""
 You are a compassionate biographer writing a beautiful life story.
 
@@ -44,15 +60,21 @@ Chapter: {chapter_title}
 Style: {style_desc}
 
 Q&A:
-{qa_text}
+{qa_text}{photo_section}
 
-Instructions:
+CRITICAL Instructions:
+- ONLY use information explicitly provided in the Q&A above
+- DO NOT add fictional details, dates, places, names, or events
+- DO NOT make assumptions or create stories beyond what the user shared
+- If information is minimal, write a SHORT chapter based ONLY on what's provided
+- IMPORTANT: If there are photo captions listed above, you MUST weave them naturally into the narrative at the most appropriate point in the story
+- Include photo placeholder as: [Image: path][Caption: "caption text"]
+- Place the photo reference where it fits best contextually in the story flow
 - Write in first person ("I was born...")
 - Remove filler words but keep the person's authentic voice
 - Connect memories naturally with transitions
 - Make it read like a story, not an interview
 - Keep it warm and emotionally engaging
-- Preserve specific details (names, places, dates)
 """
 
             response = await client.chat.completions.create(

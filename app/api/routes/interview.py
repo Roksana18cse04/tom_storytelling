@@ -89,7 +89,7 @@ async def interview(
                     break
         
         # If returning user with unanswered question, remind them
-        if has_unanswered and text.lower().strip() in ["hi", "hello", "hey"]:
+        if has_unanswered and text.lower().strip() in ["hi", "hello", "hey", "back", "continue", "previous"]:
             return {
                 "response": f"Welcome back! Your last question was: \"{last_question}\" but you didn't answer this. Please answer this question.",
                 "current_category": category,
@@ -100,7 +100,7 @@ async def interview(
             user_id=user_id,
             session_id=session_id,
             category=category,
-            question=last_question or "Free Talk",
+            question=last_question or "Free Talk",     
             response=text,
         )
 
