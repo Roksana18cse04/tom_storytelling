@@ -1,710 +1,743 @@
 {
   "memory_map": {
-    "abc": {
-      "124": {
-        "childhood": [
+    "abc": {},
+    "s123": {},
+    "123": {},
+    "user_34": {
+      "session_34": {
+        "early adulthood": [
           {
-            "id": "acee9867-c138-469f-bbd6-5c32d8627f08",
+            "id": "b49b1e28-ddc6-4375-87da-f62320998a92",
             "question": "Free Talk",
-            "response": "hi",
-            "snippet": "hi",
+            "response": "I want to shear my early adulthood memory with you.",
+            "snippet": "I want to shear my early adulthood memory with you.",
             "photos": [],
+            "photo_caption": null,
             "audio_clips": [],
             "contributors": [],
-            "timestamp": "2025-10-14T23:21:53.614943"
+            "timestamp": "2025-10-19T15:42:45.984727"
           },
           {
-            "id": "601502d7-1939-4ea4-b28e-501a7d122cd5",
-            "question": "What\u2019s one of the first memories you can recall from your childhood that stands out to you?",
-            "response": "once i was swimming at the pond",
-            "snippet": "once i was swimming at the pond",
+            "id": "1879e8a1-4728-4eac-8749-a9369811f0c1",
+            "question": "What specific memories stand out for you from that time, perhaps moments that shaped who you are today?",
+            "response": "In that time I was admitted in the university. I was too much excited for this.",
+            "snippet": "In that time I was admitted in the university.",
             "photos": [],
+            "photo_caption": null,
             "audio_clips": [],
             "contributors": [],
-            "timestamp": "2025-10-14T23:22:24.114377"
+            "timestamp": "2025-10-19T15:43:41.265310"
           },
           {
-            "id": "bab95541-8d0d-4ca7-9529-3966af6bf4e4",
-            "question": "That sounds like a lovely memory! What do you remember most about that day at the pond? Was there something special about the water, the people you were with, or how you felt while swimming?",
-            "response": "it was with my father. i was not known about the swim. my father was helping me. it was a lovely moment",
-            "snippet": "it was with my father.",
+            "id": "d98835a3-e9b8-43c4-8ed4-7567ad49f0d7",
+            "question": "What was it like for you when you first arrived at university, and how did that excitement transform into your everyday experiences there?",
+            "response": "At first it was exciting but suddenly I didn't feel good as I had no friend at that time.",
+            "snippet": "At first it was exciting but suddenly I didn't feel good as I had no friend at that time.",
             "photos": [],
+            "photo_caption": null,
             "audio_clips": [],
             "contributors": [],
-            "timestamp": "2025-10-14T23:23:20.594340"
+            "timestamp": "2025-10-19T15:44:33.688916"
           },
           {
-            "id": "f00ef361-cb2e-49e2-95d2-32e658eb27f2",
-            "question": "That sounds like a beautiful memory with your father! Can you share more about how you felt while you were swimming together? Did you feel excited, scared, or perhaps a mix of emotions?",
-            "response": "i was fell excited because it was my first time",
-            "snippet": "i was fell excited because it was my first time",
+            "id": "bdf5119c-02fb-46be-8156-dc94b08f8d9c",
+            "question": "How did you cope with feeling lonely at university, and did anything help you to connect with others over time?",
+            "response": "Then, I met a girl who was beautiful and talented. She helped me a lot.",
+            "snippet": "Then, I met a girl who was beautiful and talented.",
             "photos": [],
+            "photo_caption": null,
             "audio_clips": [],
             "contributors": [],
-            "timestamp": "2025-10-14T23:23:48.344369"
+            "timestamp": "2025-10-19T15:45:21.683004"
           },
           {
-            "id": "03b25823-ea43-46e3-a448-77f9e270ef66",
-            "question": "It sounds like that moment with your father was very special! Can you tell me more about how you and your father interacted while you were swimming? Did he teach you anything particular, or did you have any fun games you played together in the water?",
-            "response": "he helped me to learn swim when i grew up",
-            "snippet": "he helped me to learn swim when i grew up",
+            "id": "e8a2f371-7024-4c6d-9da0-d0089c27c5eb",
+            "question": "What was it about her that made such a difference for you during that time?",
+            "response": "We started spending time together and studying together.",
+            "snippet": "We started spending time together and studying together.",
             "photos": [],
+            "photo_caption": null,
             "audio_clips": [],
             "contributors": [],
-            "timestamp": "2025-10-14T23:24:27.079900"
+            "timestamp": "2025-10-19T15:45:49.472205"
           },
           {
-            "id": "7292edbc-4d6e-448e-a386-8fec802a46f8",
-            "question": "It sounds like swimming became an important part of your relationship with your father. Can you share more about how those lessons influenced your feelings about swimming as you grew older? Did it become something you looked forward to or perhaps a way to bond with him more deeply?",
-            "response": " now i love swimming",
-            "snippet": "now i love swimming",
+            "id": "a4b56164-eed5-4319-9ffe-ea679869ae98",
+            "question": "What were some of the things you enjoyed studying together, and how did that help strengthen your friendship?",
+            "response": "When I wasn\u00e2\u20ac\u2122t good at something, she helped me. When she struggled, I helped her. We took courses together.",
+            "snippet": "When I wasn\u00e2\u20ac\u2122t good at something, she helped me.",
             "photos": [],
+            "photo_caption": null,
             "audio_clips": [],
             "contributors": [],
-            "timestamp": "2025-10-14T23:32:47.000353"
+            "timestamp": "2025-10-19T15:46:35.728336"
           },
           {
-            "id": "4098ccff-ada0-448f-bea4-5274ec6204b6",
-            "question": "It\u2019s wonderful to hear how much you love swimming now! Can you share more about how swimming has shaped your life? Are there any specific memories or moments in your life where swimming played a significant role, perhaps with friends or in competitions?",
-            "response": "",
-            "snippet": "",
+            "id": "22a3f2ad-a7e6-48fb-8ab0-c57a799fe96e",
+            "question": "What subjects did you find most challenging or enjoyable while studying together, and how did those experiences shape your view of learning?",
+            "response": "I hated the EEE courses. I didn\u00e2\u20ac\u2122t understand much, but my best friend helped me a lot in those subjects.",
+            "snippet": "I hated the EEE courses.",
             "photos": [],
+            "photo_caption": null,
             "audio_clips": [],
             "contributors": [],
-            "timestamp": "2025-10-14T23:32:49.382300"
-          }
-        ]
-      },
-      "123": {
-        "childhood": [
-          {
-            "id": "a0c8e142-ad03-4823-ae65-10bf977f0bad",
-            "question": "Free Talk",
-            "response": "I want to shear my life-story",
-            "snippet": "I want to shear my life-story",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:25:41.107521"
+            "timestamp": "2025-10-19T15:48:05.097703"
           },
           {
-            "id": "b0dab2b5-40e6-4b6b-b933-a3523c88d36b",
-            "question": "Free Talk",
-            "response": "I want to shear my life-story",
-            "snippet": "I want to shear my life-story",
-            "photos": [],
+            "id": "61ec5fab-24b9-468d-8bff-1b772761e87f",
+            "question": "What emotions or thoughts were running through your mind as you stood amidst the breathtaking scene of hot air balloons gracing the sky, and how does this moment hold significance in your life journey?",
+            "response": "This moment takes me back to my early adulthood \u2014 a time when my best friend and I decided to skip class for a little adventure. We went out just to breathe, laugh, and enjoy life beyond books and lectures. As we stood beneath the sky filled with colorful hot air balloons, I remember feeling an incredible sense of freedom and joy. It was one of those rare, carefree days that reminded me how beautiful it is to pause and simply live in the moment. I even took a picture of her that day \u2014 a snapshot that still brings back the warmth, spontaneity, and friendship of that unforgettable time.",
+            "snippet": "This moment takes me back to my early adulthood \u2014 a time when my best friend and I decided to skip class for a little...",
+            "photos": [
+              "C:\\Users\\S.Soudeep\\Documents\\tom_storytelling\\user_images\\8348c133-51a9-4df4-947e-e04d1258136b_travel.jpg"
+            ],
+            "photo_caption": "Carefree adventure beneath a sky of colorful hot air balloons.",
             "audio_clips": [],
             "contributors": [],
-            "timestamp": "2025-10-16T05:26:30.747056"
-          },
-          {
-            "id": "ef7f85da-8adf-43db-b2ac-bbc918e37320",
-            "question": "Free Talk",
-            "response": "I want to shear my life-story",
-            "snippet": "I want to shear my life-story",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:26:55.714085"
-          },
-          {
-            "id": "8616709e-0f5b-44f9-a8a5-d37b35910f90",
-            "question": "Free Talk",
-            "response": "I want to shear my life-story",
-            "snippet": "I want to shear my life-story",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:26:57.544959"
-          },
-          {
-            "id": "77d3398c-1461-4e83-bcac-8fd1408c194e",
-            "question": "Free Talk",
-            "response": "I want to shear my life-story",
-            "snippet": "I want to shear my life-story",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:27:36.573107"
-          },
-          {
-            "id": "32389c4c-410a-4588-a59f-e3ef9f8746e8",
-            "question": "Free Talk",
-            "response": "I want to shear my life-story",
-            "snippet": "I want to shear my life-story",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:27:51.816425"
-          },
-          {
-            "id": "bcfd6e90-5b2d-4378-bcbd-5a6cea2aa3e5",
-            "question": "Free Talk",
-            "response": "I want to shear my life-story",
-            "snippet": "I want to shear my life-story",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:28:30.949637"
-          },
-          {
-            "id": "fd67fce3-6903-44a8-942d-d11b3c4d9c41",
-            "question": "Free Talk",
-            "response": "I want to shear my life-story",
-            "snippet": "I want to shear my life-story",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:31:04.345279"
-          },
-          {
-            "id": "7da52709-dd5c-44dd-8c6b-cb9232a458a4",
-            "question": "Free Talk",
-            "response": "I want to shear my life-story",
-            "snippet": "I want to shear my life-story",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:31:14.943425"
-          },
-          {
-            "id": "449ddef5-7f3e-49ef-b1cc-5dc244508b19",
-            "question": "Free Talk",
-            "response": "I want to shear my life-story",
-            "snippet": "I want to shear my life-story",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:31:15.731403"
-          },
-          {
-            "id": "df8eac41-8059-49f0-8f05-65259776a481",
-            "question": "Free Talk",
-            "response": "I want to shear my life-story",
-            "snippet": "I want to shear my life-story",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:31:15.903407"
-          }
-        ]
-      }
-    },
-    "s123": {
-      "123": {
-        "childhood": [
-          {
-            "id": "1a9cdfac-814d-46bb-bd32-32bd0d8a175d",
-            "question": "Free Talk",
-            "response": "I want to go with my lifestory",
-            "snippet": "I want to go with my lifestory",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:13:47.503991"
-          },
-          {
-            "id": "e36d4ba8-23e8-4cf9-a8cc-16d6c2f1d327",
-            "question": "Free Talk",
-            "response": "I want to go with my lifestory",
-            "snippet": "I want to go with my lifestory",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:14:00.056535"
-          },
-          {
-            "id": "ae8b7e07-08a6-497d-a56c-d12e378e6e7d",
-            "question": "Free Talk",
-            "response": "I want to go with my lifestory",
-            "snippet": "I want to go with my lifestory",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:24:16.729089"
-          },
-          {
-            "id": "0498b5ed-badc-4426-81dc-1bd39ad135ca",
-            "question": "Free Talk",
-            "response": "I want to go with my lifestory",
-            "snippet": "I want to go with my lifestory",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:24:20.530032"
-          }
-        ]
-      }
-    },
-    "123": {
-      "1": {
-        "childhood": [
-          {
-            "id": "cdecc243-ce0e-4fb3-9d8e-5764a16f7895",
-            "question": "Free Talk",
-            "response": "I want to generate my life story",
-            "snippet": "I want to generate my life story",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:34:47.864797"
-          },
-          {
-            "id": "ed3c1bf6-38bd-4304-9fda-abf45bd8de98",
-            "question": "Free Talk",
-            "response": "I want to generate my life story",
-            "snippet": "I want to generate my life story",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:38:04.170373"
-          }
-        ]
-      },
-      "12": {
-        "childhood": [
-          {
-            "id": "55729919-9058-4bb1-91eb-82f253df05e9",
-            "question": "Free Talk",
-            "response": "I want to create a story based on my ife",
-            "snippet": "I want to create a story based on my ife",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:39:05.313287"
-          }
-        ]
-      }
-    },
-    "abc123": {
-      "s12": {
-        "childhood": [
-          {
-            "id": "6dcbb5d4-0c66-4acd-97f0-f1df6b2ee6f9",
-            "question": "Free Talk",
-            "response": "I want to create a story based on my ife",
-            "snippet": "I want to create a story based on my ife",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:40:32.848411"
-          },
-          {
-            "id": "52c81f6b-a24d-4154-8974-042b45ddee41",
-            "question": "Free Talk",
-            "response": "I want to create a story based on my ife",
-            "snippet": "I want to create a story based on my ife",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T05:43:01.803985"
-          },
-          {
-            "id": "20918308-ce89-4abf-8498-1b9cbe8ed3e0",
-            "question": "Free Talk",
-            "response": "I want to create a story based on my ife",
-            "snippet": "I want to create a story based on my ife",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T11:47:09.798636"
-          },
-          {
-            "id": "6fe233db-64cf-4b3c-997f-c0a1cf540f47",
-            "question": "Free Talk",
-            "response": "I want to create a story based on my ife",
-            "snippet": "I want to create a story based on my ife",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T11:47:26.094049"
-          },
-          {
-            "id": "f3d51832-5164-4b7a-8941-1767fc836683",
-            "question": "Free Talk",
-            "response": "I want to create a story based on my ife",
-            "snippet": "I want to create a story based on my ife",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-16T11:49:55.061984"
-          },
-          {
-            "id": "e548eaf6-7d3c-4b65-8eca-c8c4e1c489ea",
-            "question": "What\u2019s one of the first memories you can recall from your childhood that stands out to you?",
-            "response": "I want to generate my life story.",
-            "snippet": "I want to generate my life story.",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T09:46:41.490720"
-          },
-          {
-            "id": "db35a543-dafa-4f6f-a761-e6714ed68f1a",
-            "question": "What were some of your favorite activities or games to play when you were a child, and what made them so special to you?",
-            "response": "I want to generate my life story.",
-            "snippet": "I want to generate my life story.",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T09:47:26.091408"
-          },
-          {
-            "id": "b6aa61b5-958e-4e7e-99e7-5ea4ef00c642",
-            "question": "What\u2019s one of your favorite family traditions or routines from your childhood that brings back warm memories for you?",
-            "response": "I want to generate a life story ",
-            "snippet": "I want to generate a life story",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T10:27:33.264034"
-          },
-          {
-            "id": "f4725a75-cad7-434f-afbe-ee9b1dbc942f",
-            "question": "What\u2019s one of the happiest moments you can remember from your childhood, and what made it so special to you?",
-            "response": "I meet as girl in rainy night",
-            "snippet": "I meet as girl in rainy night",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T10:28:11.163146"
-          },
-          {
-            "id": "05bd9897-1038-49e6-91ea-7c4eae4ed1bf",
-            "question": "Can you describe that rainy night when you met the girl? What were you feeling, and what made that moment stand out to you?",
-            "response": "That day I was married with my favourite girl",
-            "snippet": "That day I was married with my favourite girl",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T10:41:19.503526"
-          },
-          {
-            "id": "24251adf-de91-4e7d-b7c9-12dddacf1546",
-            "question": "What was it about that rainy night and your marriage to her that made it such a cherished memory for you?",
-            "response": "Hi",
-            "snippet": "Hi",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T10:47:34.680727"
-          },
-          {
-            "id": "925ca5be-9eed-49b6-b330-6cc2e587f656",
-            "question": "What do you remember most about your relationship with the girl you married that rainy night, and how did that moment change your life?",
-            "response": "",
-            "snippet": "",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T10:47:38.574073"
+            "timestamp": "2025-10-19T16:44:16.584111"
           }
         ],
-        "photo_story": [
+        "career work": [
           {
-            "id": "742660db-4e3a-499c-8261-5e1042b085fb",
-            "question": "What does this photo remind you of, and what story or memory does it evoke for you?",
+            "id": "e3b7c9a2-46b4-48a0-8bed-4063afe71c87",
+            "question": "What was it about your friend's support that made a difference in your understanding of those challenging EEE courses?",
+            "response": "",
+            "snippet": "",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-19T15:48:06.238678"
+          },
+          {
+            "id": "c7978251-9a7e-4fc0-a9cd-8b775361f524",
+            "question": "What\u00e2\u20ac\u2122s the story behind the moment captured in this photo, and how does it reflect a significant experience or relationship in your life?",
+            "response": "Actually, this is the photo from my Early Adult phase, and it reflects my university life \u00e2\u20ac\u201d how I spent time with my best friend. No doubt she was the best girl I met, beauty with brain. She was so helpful and kind.",
+            "snippet": "Actually, this is the photo from my Early Adult phase, and it reflects my university life...",
+            "photos": [
+              "C:\\Users\\S.Soudeep\\Documents\\tom_storytelling\\user_images\\f6f95b36-fd90-47fd-bc18-cc742ae620cf_university.jpg"
+            ],
+            "photo_caption": "University days with my best friend: beauty, brains, and kindness.",
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-19T15:51:17.684333"
+          },
+          {
+            "id": "46c0e4e3-dbe9-4493-9da9-6a3e2517230e",
+            "question": "What feelings or memories come to mind when you think about this moment surrounded by hot air balloons?\n\nPlease also mention which phase of your life this was from (childhood, teenage years, early adulthood, career & work, relationships & family, hobbies & adventures, or later life) and what made this moment special to you.",
             "response": "",
             "snippet": "",
             "photos": [
-              "C:\\Users\\S.Soudeep\\Documents\\tom_storytelling\\user_images\\4434edf5-7f5b-4d10-8a5e-2814dafb756f_wedding-photo-ideas_studio_n_photography.jpg"
+              "C:\\Users\\S.Soudeep\\Documents\\tom_storytelling\\user_images\\49fbd529-97d2-4f6e-aa1d-bae1247c7a97_travel.jpg"
             ],
+            "photo_caption": null,
             "audio_clips": [],
             "contributors": [],
-            "timestamp": "2025-10-16T11:54:32.290194"
-          }
-        ]
-      },
-      "s123": {
-        "childhood": [
-          {
-            "id": "3a877e41-ceca-4e68-9fbb-f24721015f75",
-            "question": "Free Talk",
-            "response": "In rainy day, I collected the mango",
-            "snippet": "In rainy day, I collected the mango",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T09:18:02.193042"
+            "timestamp": "2025-10-19T16:51:10.567176"
           },
           {
-            "id": "4a691428-155c-4e96-9e21-922fb6f6a345",
-            "question": "What was it like for you to collect mangoes on a rainy day? Did you enjoy that experience, and what did you do with the mangoes afterward?",
-            "response": "I want to go with my lifestory",
-            "snippet": "I want to go with my lifestory",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T09:39:23.811119"
-          },
-          {
-            "id": "f0a0d4c6-30f8-4f78-879a-0ccf7184598e",
-            "question": "What are some other memories from your childhood that stand out to you, perhaps moments that made you feel particularly joyful or shaped who you are today?",
-            "response": "I want to generate my life story.",
-            "snippet": "I want to generate my life story.",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T10:15:52.427196"
-          },
-          {
-            "id": "9e7f256c-3de5-4bd6-8528-01e8076034c1",
-            "question": "What is a specific moment from your childhood that you feel was significant in shaping who you are today?",
-            "response": "I want to generate my life story.",
-            "snippet": "I want to generate my life story.",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T10:16:24.940583"
-          },
-          {
-            "id": "58a4f4f4-443e-4775-a270-d7c615c81dc3",
-            "question": "Can you tell me more about your family life during your childhood? What were the relationships like with your parents and siblings?",
-            "response": "",
-            "snippet": "",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T10:16:26.042271"
-          }
-        ]
-      },
-      "string": {
-        "photo_story": [
-          {
-            "id": "2838e06a-6f08-4b31-ad81-8f259a7ef530",
-            "question": "What emotions or memories does this photo evoke for you, and can you share the story behind that moment?",
+            "id": "273dec75-f86d-404a-9f0b-82beb14a9912",
+            "question": "What\u2019s the story behind this moment, and how did it shape your journey with the person you\u2019re sharing it with?",
             "response": "",
             "snippet": "",
             "photos": [
-              "C:\\Users\\S.Soudeep\\Documents\\tom_storytelling\\user_images\\ff5391ab-21d1-4ab4-a8b7-657fb59d6c2a_must-take-wedding-photos-bride-groom-walk-clary-prfeiffer-photography-0723-primary-b4221bcb1a2b43e6b0820a8c3e3bce52.jpg"
+              "C:\\Users\\S.Soudeep\\Documents\\tom_storytelling\\user_images\\4afbcf45-a313-468a-a70b-bb8f42e9ad05_university.jpg"
             ],
+            "photo_caption": null,
             "audio_clips": [],
             "contributors": [],
-            "timestamp": "2025-10-18T10:39:09.277224"
+            "timestamp": "2025-10-19T16:52:47.118374"
           }
         ]
       }
     },
-    "a12": {},
-    "soudeep12": {
-      "s1122": {
+    "user_36": {
+      "session_36": {
+        "career work": [
+          {
+            "id": "a4431b8f-f97b-4d6c-a3f1-4efc1c82d1f2",
+            "question": "Free Talk",
+            "response": "It was from my carrer and work life",
+            "snippet": "It was from my carrer and work life",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-19T16:55:43.037954"
+          },
+          {
+            "id": "826cf80e-e044-4cd1-8355-14d9428c66c0",
+            "question": "What led you to choose your particular career path, and how did that choice evolve over the years?",
+            "response": "",
+            "snippet": "",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-19T16:55:44.233419"
+          }
+        ]
+      }
+    },
+    "user_11": {
+      "session_11": {
+        "early adulthood": [
+          {
+            "id": "0cc6dc4b-c111-4528-a939-42ecc1f056e2",
+            "question": "What\u2019s the story behind this moment, and how did it shape your connection with the person beside you?",
+            "response": "",
+            "snippet": "",
+            "photos": [
+              "C:\\Users\\S.Soudeep\\Documents\\tom_storytelling\\user_images\\69f1eec7-3026-46c8-a47e-fa972f43395e_university.jpg"
+            ],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T10:04:45.576967"
+          }
+        ],
         "childhood": [
           {
-            "id": "3cc02fa3-f640-40c0-adc6-ef510f4d00cb",
+            "id": "622b9a24-2961-43a7-8d70-6e7088c4e739",
+            "question": "Free Talk",
+            "response": "I want to shear my childhood memory with you",
+            "snippet": "I want to shear my childhood memory with you",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T10:18:28.304035"
+          },
+          {
+            "id": "014a4f0d-db77-4d2e-a77c-6be393de9baf",
+            "question": "What particular memories stand out for you from your childhood that you'd like to share?",
+            "response": "Mostly in rainy days I always go to outside to pick mangos",
+            "snippet": "Mostly in rainy days I always go to outside to pick mangos",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T10:23:48.673238"
+          },
+          {
+            "id": "dfe5b82e-e482-4a2e-928c-f0ed0bb396b7",
+            "question": "What was it about those rainy days that made picking mangos so special for you?",
+            "response": "There was something magical about those rainy days \u2014 the smell of wet earth, the sound of raindrops on leaves, and the thrill of climbing trees to pick fresh mangos. It wasn\u2019t just about the fruit, it was about the feeling of freedom and joy that came with it.",
+            "snippet": "There was something magical about those rainy days \u2014 the smell of wet earth, the sound of raindrops on leaves, and the...",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T10:24:29.487947"
+          },
+          {
+            "id": "d5f11715-452f-4995-8f9d-8048df29c84a",
+            "question": "What do you remember about the times you spent with friends or family during those rainy days of mango picking?",
+            "response": "I remember the laughter, the playful arguments over who picked the biggest mango, and the way we all ended up drenched but didn\u2019t care. We\u2019d sit together afterward, sharing the fruits and stories \u2014 those moments felt simple, pure, and full of happiness.",
+            "snippet": "I remember the laughter, the playful arguments over who picked the biggest mango, and the way we all ended up drenched...",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T10:31:11.902942"
+          },
+          {
+            "id": "77971023-e5ae-42c0-b85a-b2ecba18a5dd",
+            "question": "What do you think it was about those simple moments of laughter and sharing that made such a lasting impression on you?",
+            "response": "What do you think it was about those simple moments of laughter and sharing that made such a lasting impression on you?",
+            "snippet": "What do you think it was about those simple moments of laughter and sharing that made such a lasting impression on you?",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T10:31:28.361436"
+          },
+          {
+            "id": "f2af1e32-f391-4c44-a5df-1521a77a81e6",
+            "question": "What do you think those experiences taught you about friendship and connection that you've carried with you into later life?",
+            "response": "What do you think those experiences taught you about friendship and connection that you've carried with you into later life?",
+            "snippet": "What do you think those experiences taught you about friendship and connection that you've carried with you into later...",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T10:31:41.640883"
+          },
+          {
+            "id": "bdb5ca94-c3bd-45c6-b9c3-fecf5fea89bc",
+            "question": "How do you think those joyful moments of picking mangos with friends shaped the way you approach relationships and connections now?",
+            "response": "How do you think those joyful moments of picking mangos with friends shaped the way you approach relationships and connections now?",
+            "snippet": "How do you think those joyful moments of picking mangos with friends shaped the way you approach relationships and...",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T10:31:57.705586"
+          },
+          {
+            "id": "1132acbd-c9e3-4666-b7db-3ebf69dc9492",
+            "question": "What do you think it is about those memories that still brings you joy when you think back on them now?",
+            "response": "Those memories still bring me joy because they remind me of a time when life felt so simple \u2014 no worries, just laughter, rain, and the sweetness of freshly picked mangos. It\u2019s that carefree happiness and togetherness I still hold close to my heart.",
+            "snippet": "Those memories still bring me joy because they remind me of a time when life felt so simple \u2014 no worries, just...",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T10:32:24.450306"
+          },
+          {
+            "id": "22c00d51-65d9-46b9-823f-b5f601c78ff0",
+            "question": "What do you think it was about that sense of simplicity and togetherness that you\u2019ve carried with you into your life today?",
+            "response": "That sense of simplicity and togetherness taught me to value little moments \u2014 laughter, shared experiences, and genuine connections. Even now, I try to carry that same warmth into my life, reminding myself that happiness often lives in the simplest things.",
+            "snippet": "That sense of simplicity and togetherness taught me to value little moments \u2014 laughter, shared experiences, and genuine...",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T10:32:59.162686"
+          },
+          {
+            "id": "9cc057be-f7ee-459a-b50a-ff383a1b0224",
+            "question": "What\u2019s one of the first memories you can recall from childhood that highlights that sense of warmth and joy you mentioned?",
+            "response": "That sense of simplicity and togetherness taught me to value little moments \u2014 laughter, shared experiences, and genuine connections. Even now, I try to carry that same warmth into my life, reminding myself that happiness often lives in the simplest things.",
+            "snippet": "That sense of simplicity and togetherness taught me to value little moments \u2014 laughter, shared experiences, and genuine...",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T10:33:17.699000"
+          },
+          {
+            "id": "2a7a7eae-1a25-4a20-ab2f-cd1de507a181",
+            "question": "Can you tell me a bit more about the house you grew up in and how it felt to be there during those joyful moments?",
+            "response": "The house I grew up in was simple but full of life \u2014 the smell of fresh rain would drift in through the open windows, and laughter echoed through every corner. During those joyful mango-picking days, it felt like the whole house was alive with warmth and togetherness. It wasn\u2019t just a place; it felt like a part of who I was.",
+            "snippet": "The house I grew up in was simple but full of life \u2014 the smell of fresh rain would drift in through the open windows,...",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T10:33:42.520185"
+          },
+          {
+            "id": "6bda9b33-0a9b-4f73-9f13-01712ba9e127",
+            "question": "What do you remember about the feeling of safety and comfort in your home, especially during those rainy days filled with laughter and warmth?",
+            "response": "I remember feeling completely safe and at peace \u2014 the sound of rain tapping on the tin roof, the soft glow of light inside, and my family\u2019s laughter wrapping around me like a blanket. Even when the world outside felt gray and cold, home was always warm, alive, and full of love.",
+            "snippet": "I remember feeling completely safe and at peace \u2014 the sound of rain tapping on the tin roof, the soft glow of light...",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T10:34:14.043286"
+          },
+          {
+            "id": "eaa44cda-ffd6-48f5-b899-22e4e5de2dc6",
+            "question": "What do you think your family did to create that sense of warmth and love in your home, especially during those rainy days?",
+            "response": "I think it was the little things my family did \u2014 sharing food fresh from the kitchen, teasing each other, telling stories while the rain poured outside. Everyone looked out for one another. It wasn\u2019t grand gestures, just quiet care and laughter that made our home feel so warm and full of love.",
+            "snippet": "I think it was the little things my family did \u2014 sharing food fresh from the kitchen, teasing each other, telling...",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T10:34:36.584233"
+          },
+          {
+            "id": "d7ebe245-b39b-4c5e-8004-cc353a875bb1",
+            "question": "What are some of the specific meals or dishes that you remember enjoying together as a family during those rainy days?",
+            "response": "On those rainy days, the house always smelled like comfort \u2014 hot khichuri simmering on the stove, crispy beguni or aloo chop fresh from the pan, and steaming cups of tea passed around to everyone. Sometimes Ma would slice ripe mangoes after lunch, and we\u2019d sit by the window watching the rain, sharing food and laughter.",
+            "snippet": "On those rainy days, the house always smelled like comfort \u2014 hot khichuri simmering on the stove, crispy beguni or aloo...",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T10:34:57.343651"
+          },
+          {
+            "id": "ffb5c58b-65d2-48e8-a2fc-aa236784d561",
+            "question": "What cherished childhood memory does this joyful scene of children playing and gathering fruit in the rain bring to mind for you?",
+            "response": "Yeah, I'm sharing this picture because it's one of my favorite childhood memories. It was taken during the time when I used to go out with my friends to pick mangoes, and the joy we felt back then was beyond words.",
+            "snippet": "Yeah, I'm sharing this picture because it's one of my favorite childhood memories.",
+            "photos": [
+              "C:\\Users\\S.Soudeep\\Documents\\tom_storytelling\\user_images\\65716a34-0d12-4ca7-af65-c93cdb9aaaa5_mango.jpg!w700wp"
+            ],
+            "photo_caption": "Childhood joy: Mango picking adventures with friends.",
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T10:46:34.235149"
+          }
+        ],
+        "teenage years": [
+          {
+            "id": "38432d7e-8b0b-42ab-98de-3f2aa9f0e4dd",
+            "question": "What do you remember most about the friendships you formed during your teenage years, and how did those connections influence your sense of comfort and joy?",
+            "response": "I am back",
+            "snippet": "I am back",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T12:32:38.556998"
+          },
+          {
+            "id": "88a6ef48-ffbe-4ba3-9c55-01fc6af664b5",
+            "question": "That sounds truly special. Can you share more about the atmosphere of the day and how it felt to be surrounded by your loved ones?",
+            "response": "Hey!I am back",
+            "snippet": "Hey!I am back",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T12:33:32.634841"
+          },
+          {
+            "id": "20a8fdaa-d3a3-43fb-a1f5-3f5412969841",
             "question": "Free Talk",
             "response": "Hi",
             "snippet": "Hi",
             "photos": [],
+            "photo_caption": null,
             "audio_clips": [],
             "contributors": [],
-            "timestamp": "2025-10-18T11:02:51.443144"
+            "timestamp": "2025-10-20T12:35:03.124611"
           },
           {
-            "id": "17896f19-fae5-4a0e-bb3b-96f791adc29f",
-            "question": "What\u2019s one of the earliest memories you have from your childhood that stands out to you?",
-            "response": "I was walking with my brother on the road",
-            "snippet": "I was walking with my brother on the road",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T11:03:41.990588"
-          },
-          {
-            "id": "a9f6cf30-a3ee-4ae9-ac81-6263740d65db",
-            "question": "What do you remember about that walk with your brother? Were there any particular sights, sounds, or feelings that stood out to you?",
-            "response": "I saw some beautiful flower garden and also meet with a teacher.",
-            "snippet": "I saw some beautiful flower garden and also meet with a teacher.",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T11:04:24.498222"
-          },
-          {
-            "id": "347f6e2e-8efc-4234-8ac0-2f264b4de950",
-            "question": "What do you remember about your interaction with your teacher during that walk? How did it make you feel?",
-            "response": "He, was coming from his home with riding a bycicle and tell my brother that he should admit me into the school",
-            "snippet": "He, was coming from his home with riding a bycicle and tell my brother that he should admit me into the school",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T11:05:21.396936"
-          },
-          {
-            "id": "ec935dde-ecb3-40fe-9ce7-9b80b1b42edc",
-            "question": "How did you feel about the idea of starting school after your teacher mentioned it to your brother?",
+            "id": "f2c3e288-e947-4302-a994-b9db915f0158",
+            "question": "Free Talk",
             "response": "Hi",
             "snippet": "Hi",
             "photos": [],
+            "photo_caption": null,
             "audio_clips": [],
             "contributors": [],
-            "timestamp": "2025-10-18T11:14:01.576653"
+            "timestamp": "2025-10-20T14:28:27.444279"
           },
           {
-            "id": "fc892bb2-2e37-4c94-9ad8-0fd8cef3efeb",
-            "question": "What were your thoughts and feelings about starting school\u2014were you excited, nervous, or a mix of both?",
-            "response": "I was too excited that i will also go school with my friends",
-            "snippet": "I was too excited that i will also go school with my friends",
+            "id": "14985e50-2c44-4c26-9d11-e5329370b8b1",
+            "question": "That sounds truly special. What do you remember most vividly about the day, perhaps a particular moment that really stood out for you?",
+            "response": "Hey, I am come back",
+            "snippet": "Hey, I am come back",
             "photos": [],
+            "photo_caption": null,
             "audio_clips": [],
             "contributors": [],
-            "timestamp": "2025-10-18T11:14:36.118824"
-          },
-          {
-            "id": "79cd1bc8-6f85-4764-84c9-0d20c173452b",
-            "question": "What were you most looking forward to doing with your friends once you started school?",
-            "response": "",
-            "snippet": "",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T11:14:37.134952"
+            "timestamp": "2025-10-21T09:31:50.444253"
           }
-        ]
-      },
-      "string": {
-        "photo_story": [
+        ],
+        "relationships & family": [
           {
-            "id": "c7ca6e61-0ce6-4da1-9f1f-bf5844e13cdf",
-            "question": "What emotions or memories does this photo evoke for you, and can you share the story behind that moment?",
-            "response": "",
-            "snippet": "",
+            "id": "56a6488e-5483-4f60-a1ff-c11de3f587cb",
+            "question": "What emotions and memories do this vibrant celebration and traditional attire evoke for you, and how did this day unfold in your life?",
+            "response": "This picture is incredibly special to me\u2014it\u2019s from my wedding day, the day I married my dream queen. The vibrant celebration and traditional attire fill me with joy and nostalgia, making this moment one of the most unforgettable days of my life.",
+            "snippet": "This picture is incredibly special to me\u2014it\u2019s from my wedding day, the day I married my dream queen.",
             "photos": [
-              "C:\\Users\\S.Soudeep\\Documents\\tom_storytelling\\user_images\\473d1656-6d94-4e17-be0b-a4a2dabc622a_must-take-wedding-photos-bride-groom-walk-clary-prfeiffer-photography-0723-primary-b4221bcb1a2b43e6b0820a8c3e3bce52.jpg"
+              "C:\\Users\\S.Soudeep\\Documents\\tom_storytelling\\user_images\\6ad13ea0-2518-4bae-9a72-c39b13e66542_wedding.jpg"
             ],
+            "photo_caption": "Unforgettable wedding day filled with vibrant tradition and joy.",
             "audio_clips": [],
             "contributors": [],
-            "timestamp": "2025-10-18T12:42:51.306913"
-          },
-          {
-            "id": "a1a0f49d-0939-4a3c-9f4f-66d962bafcc8",
-            "question": "What emotions or memories does this photo evoke for you, and can you share the story behind that moment?",
-            "response": "",
-            "snippet": "",
-            "photos": [
-              "C:\\Users\\S.Soudeep\\Documents\\tom_storytelling\\user_images\\d2f63313-d0c5-4586-883a-7e5dcec68487_must-take-wedding-photos-bride-groom-walk-clary-prfeiffer-photography-0723-primary-b4221bcb1a2b43e6b0820a8c3e3bce52.jpg"
-            ],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T12:43:09.646703"
+            "timestamp": "2025-10-20T12:01:36.672840"
           }
         ]
       }
     },
-    "soudeep": {
-      "ss": {
-        "childhood": [
+    "user_33": {
+      "session_33": {
+        "teenage years": [
           {
-            "id": "299d61df-290b-4215-acfe-a682251cd06e",
+            "id": "86214cf9-0a24-491e-9d65-f47212025d31",
             "question": "Free Talk",
-            "response": "I want to shear you my current memory of today about traveling",
-            "snippet": "I want to shear you my current memory of today about traveling",
+            "response": "I want to shear my high schools life story with you",
+            "snippet": "I want to shear my high schools life story with you",
             "photos": [],
+            "photo_caption": null,
             "audio_clips": [],
             "contributors": [],
-            "timestamp": "2025-10-18T12:33:03.346881"
+            "timestamp": "2025-10-20T15:21:39.196479"
           },
           {
-            "id": "3249feb9-b5f0-4fec-8fb9-9b193c660854",
-            "question": "What do you remember about the places you traveled to during your childhood, and how did those experiences shape your perspective on the world?",
-            "response": "I want to shear you my current memory of today about traveling which was my adulthood recent memory",
-            "snippet": "I want to shear you my current memory of today about traveling which was my adulthood recent memory",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T12:52:36.972485"
-          },
-          {
-            "id": "cf98760e-7654-4e46-a431-a2269105a06a",
-            "question": "What are some of the places you visited during your childhood that left a lasting impression on you, and what do you remember feeling or experiencing there?",
-            "response": "I want to shear you my current memory of today about traveling which was my adulthood recent memory",
-            "snippet": "I want to shear you my current memory of today about traveling which was my adulthood recent memory",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T12:56:28.266160"
-          },
-          {
-            "id": "0e8d2270-3ee2-4c61-9a39-2e87226d6fd8",
-            "question": "Can you share one of your earliest childhood memories that stands out to you, and what feelings or thoughts come up when you think about that moment?",
+            "id": "956c75c5-5e25-4404-85a0-3e8baa30139a",
+            "question": "What are some of the most memorable experiences you had during your time at high school?",
             "response": "",
             "snippet": "",
             "photos": [],
+            "photo_caption": null,
             "audio_clips": [],
             "contributors": [],
-            "timestamp": "2025-10-18T12:56:33.863153"
+            "timestamp": "2025-10-20T15:21:40.840737"
           }
         ]
       }
     },
-    "soudeep22": {
-      "ss22": {
+    "user_44": {
+      "session_44": {
         "childhood": [
           {
-            "id": "3b1c669b-6fc2-480a-a710-bab51eb4cff5",
+            "id": "1d440ba7-26c1-47f2-b94d-90133fb6772e",
             "question": "Free Talk",
-            "response": "I want to shear you my current memory of today about traveling which was my adulthood recent memory",
-            "snippet": "I want to shear you my current memory of today about traveling which was my adulthood recent memory",
+            "response": "I want to shear my childhood memory with you",
+            "snippet": "I want to shear my childhood memory with you",
             "photos": [],
+            "photo_caption": null,
             "audio_clips": [],
             "contributors": [],
-            "timestamp": "2025-10-18T12:56:51.359155"
+            "timestamp": "2025-10-20T15:25:49.921746"
           },
           {
-            "id": "577b2444-e9af-44e8-99e1-af770ee21679",
-            "question": "What\u2019s one of your favorite childhood memories related to travel or a place you visited?",
-            "response": "I want to shear you my current memory of today about traveling which was my adulthood recent memory",
-            "snippet": "I want to shear you my current memory of today about traveling which was my adulthood recent memory",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T13:00:27.786428"
-          },
-          {
-            "id": "ec27a01f-45e1-477d-a389-3b314d0134fe",
-            "question": "I understand that traveling as an adult can be really impactful; could you share what makes that recent travel experience stand out to you compared to your childhood travels?",
-            "response": "I want to shear you my current memory of today about traveling which was my adulthood recent memory",
-            "snippet": "I want to shear you my current memory of today about traveling which was my adulthood recent memory",
-            "photos": [],
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": "2025-10-18T13:01:18.269613"
-          },
-          {
-            "id": "e26d08b0-0445-4b2e-9987-79404b00ef8e",
-            "question": "What\u2019s one of your earliest memories of a family trip or vacation from your childhood, and how did it make you feel?",
+            "id": "7c038495-cbab-4dbc-ac7c-8dec3af42246",
+            "question": "What\u2019s one of your earliest memories that stands out to you, perhaps something that made you feel particularly happy or safe?",
             "response": "",
             "snippet": "",
             "photos": [],
+            "photo_caption": null,
             "audio_clips": [],
             "contributors": [],
-            "timestamp": "2025-10-18T13:01:19.358207"
+            "timestamp": "2025-10-20T15:25:51.565662"
+          },
+          {
+            "id": "b9c83566-c262-412f-94e5-a20b8b403ccc",
+            "question": "What is a memorable moment you\u2019ve shared with a friend while working on a project or studying together, and how did it impact your relationship?",
+            "response": "It was the best memory for me when I was in schools or in the childhood",
+            "snippet": "It was the best memory for me when I was in schools or in the childhood",
+            "photos": [
+              "C:\\Users\\S.Soudeep\\Documents\\tom_storytelling\\user_images\\049f9407-d163-441a-a045-1e25bbd35607_university.jpg"
+            ],
+            "photo_caption": "School days joy: Sharing laughter and learning together.",
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T15:27:51.222557"
+          }
+        ]
+      }
+    },
+    "user_55": {
+      "session_55": {
+        "childhood": [
+          {
+            "id": "a14a401e-7cac-4f5e-a9db-7e7da89a2fff",
+            "question": "Free Talk",
+            "response": "I want to shear my childhood memory with you",
+            "snippet": "I want to shear my childhood memory with you",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T15:45:33.607481"
+          },
+          {
+            "id": "6f0a58f9-5fe6-4204-9dd5-3ea4cf08871a",
+            "question": "What is a memorable experience you've had while collaborating with someone on a project or activity, and how did it shape your perspective or friendship?",
+            "response": "It was the best day in my life at my schools first day when I was child",
+            "snippet": "It was the best day in my life at my schools first day when I was child",
+            "photos": [
+              "C:\\Users\\S.Soudeep\\Documents\\tom_storytelling\\user_images\\c59e6d8b-fc38-425f-95dc-f5ebc7142598_university.jpg"
+            ],
+            "photo_caption": "First day of school excitement, childhood memories come alive.",
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-20T15:47:55.226491"
+          },
+          {
+            "id": "ec05427c-cd1a-4f13-ac83-de34af1d55d3",
+            "question": "Free Talk",
+            "response": "Previous",
+            "snippet": "Previous",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-21T09:47:24.399989"
+          },
+          {
+            "id": "1902e350-f627-4ef8-b5d8-710ed062e87f",
+            "question": "That sounds special. What do you remember most vividly about that first day at school?",
+            "response": "",
+            "snippet": "",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-21T09:47:25.871682"
+          }
+        ]
+      }
+    },
+    "user_555": {
+      "session_555": {
+        "teenage years": [
+          {
+            "id": "0b2217a7-66d7-419d-91ee-8c49836f5ea1",
+            "question": "Free Talk",
+            "response": "It is related to my high schools",
+            "snippet": "It is related to my high schools",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-21T12:19:48.561084"
+          },
+          {
+            "id": "735006de-44e0-4f94-b4df-ac0a90ab5169",
+            "question": "What do you remember most about your experiences in high school?",
+            "response": "I was the first boy in the class",
+            "snippet": "I was the first boy in the class",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-21T12:20:06.974400"
+          }
+        ]
+      }
+    },
+    "user_5555": {
+      "session_5555": {
+        "childhood": [
+          {
+            "id": "a7e92084-3d3c-46b6-992c-256a7e18b7ec",
+            "question": "Free Talk",
+            "response": "Actually, I want to shear my childhood memory with you",
+            "snippet": "Actually, I want to shear my childhood memory with you",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-21T12:25:53.063847"
+          },
+          {
+            "id": "a88d5d7c-dabb-4d40-b5ef-a7f096572543",
+            "question": "That sounds lovely; what specific memory from your childhood stands out to you the most, and why do you think it has stayed with you?",
+            "response": "In childhood I like the rainy days and it's memorable for me as in that day me and my friend picks mango",
+            "snippet": "In childhood I like the rainy days and it's memorable for me as in that day me and my friend picks mango",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-21T12:26:47.277981"
+          },
+          {
+            "id": "fa2f36b4-0936-4bfe-abda-bb3ffe4aba27",
+            "question": "What was a memorable experience you had while collaborating with someone on a project or activity outside, and how did it impact your relationship with them?",
+            "response": "This was my chidhood best memory because in that day I first went to schoold and meet my friend",
+            "snippet": "This was my chidhood best memory because in that day I first went to schoold and meet my friend",
+            "photos": [
+              "C:\\Users\\S.Soudeep\\Documents\\tom_storytelling\\user_images\\e186ee4e-f8ac-4f16-b32c-9a41199ec823_university.jpg"
+            ],
+            "photo_caption": "First Day of School: Meeting My Best Friend, 2023.",
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-21T12:29:33.985329"
+          }
+        ]
+      }
+    },
+    "user_2222": {
+      "session_2222": {
+        "childhood": [
+          {
+            "id": "eee3b434-1fc9-40c1-9a7c-5749f64bd373",
+            "question": "Free Talk",
+            "response": "I want to shear my childhood memory with you",
+            "snippet": "I want to shear my childhood memory with you",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-21T14:46:09.334030"
+          },
+          {
+            "id": "14013300-bfb5-45f8-b5bb-ba88173a985b",
+            "question": "That\u2019s lovely to hear. What\u2019s one of your earliest memories from your childhood that really stands out to you?",
+            "response": "In that memories I remmber that, me with my friend pick mangos on rainy day",
+            "snippet": "In that memories I remmber that, me with my friend pick mangos on rainy day",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-21T14:50:24.220652"
+          },
+          {
+            "id": "0b71d7b8-1888-4cf4-a424-851009ee60c9",
+            "question": "That sounds lovely. Can you tell me more about that day? What was the weather like, and how did you feel while you were picking the mangos with your friend?",
+            "response": "",
+            "snippet": "",
+            "photos": [],
+            "photo_caption": null,
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-21T14:50:25.242602"
+          },
+          {
+            "id": "dadc87f1-1cd3-4af5-9592-f8318b5a6207",
+            "question": "What cherished memory does this image of a child enjoying fruit in nature, surrounded by birds, evoke for you?",
+            "response": "It's the only picture which I have colledted in my childhood memories, that day was so joyful and enjoyable with my friends. Also, I was indipendent in that stage.",
+            "snippet": "It's the only picture which I have colledted in my childhood memories, that day was so joyful and enjoyable with my...",
+            "photos": [
+              "C:\\Users\\S.Soudeep\\Documents\\tom_storytelling\\user_images\\97f9b714-1425-43ce-8be6-123cfd9c822f_mango.jpeg"
+            ],
+            "photo_caption": "Cherished childhood joy and independence among friends.",
+            "audio_clips": [],
+            "contributors": [],
+            "timestamp": "2025-10-21T14:53:10.334291"
           }
         ]
       }
     }
   },
   "user_phase": {
-    "abc": {
-      "123": "childhood"
-    },
-    "123": {
-      "1": "childhood",
-      "12": "childhood"
-    },
-    "abc123": {
-      "s12": "childhood",
-      "s123": "childhood"
-    },
+    "abc": {},
+    "123": {},
+    "abc123": {},
     "a12": {},
     "soudeep12": {
-      "s1122": "childhood"
+      "ss12": "childhood"
     },
-    "soudeep": {
-      "ss": "childhood"
-    },
+    "soudeep": {},
     "soudeep22": {
       "ss22": "childhood"
+    },
+    "a1122": {},
+    "ss": {},
+    "user6": {},
+    "string1": {
+      "string2": "career work"
+    },
+    "user9": {},
+    "user10": {},
+    "user_1": {
+      "session_1": "career work"
+    },
+    "user_2": {
+      "session_2": "early adulthood"
+    },
+    "user33": {
+      "session33": "hobbies & adventures"
+    },
+    "user_34": {
+      "session_34": "career work"
+    },
+    "user_36": {
+      "session_36": "career work"
+    },
+    "user_11": {
+      "session_11": "teenage years"
+    },
+    "user_33": {
+      "session_33": "teenage years"
+    },
+    "user_44": {
+      "session_44": "childhood",
+      "sssion_44": null
+    },
+    "user_55": {
+      "session_55": "childhood"
+    },
+    "user_555": {
+      "session_555": "teenage years"
+    },
+    "user_5555": {
+      "session_5555": "childhood"
+    },
+    "user_2222": {
+      "session_2222": "childhood"
     }
   }
 }

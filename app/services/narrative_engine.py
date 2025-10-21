@@ -12,34 +12,69 @@ class NarrativeEngine:
 
     def __init__(self):
         self.model = "gpt-4o-mini"
+        self.styles = {
+            "memoir": "conversational, first-person, warm and personal",
+            "biography": "polished, third-person, formal and structured"
+        }
 
-    async def generate_session_story(self, user_id: str, session_id: str) -> str:
-        """Generate a story for a specific session of a user."""
+    async def generate_chapter(self, user_id: str, session_id: str, category: str, style: str = "memoir") -> str:
+        """Generate a narrative chapter for a specific category."""
         try:
-            session_data = memory_service.get_user_memories(user_id, session_id)
-            if not session_data:
-                return "No memories found for this session."
+            memories = memory_service.get_category_memories(user_id, session_id, category)
+            if not memories:
+                return f"No memories found for {category}."
 
-            phase = memory_service.get_phase(user_id, session_id).capitalize()
-            
             qa_text = ""
-            for category, memories in session_data.items():
-                for m in memories:
-                    if m.get("response"):
-                        qa_text += f"Q: {m.get('question', '')}\nA: {m.get('response', '')}\n\n"
+            photo_info = ""
+            has_substantial_content = False
+            
+            for m in memories:
+                response = m.get("response", "").strip()
+                if response:
+                    qa_text += f"Q: {m.get('question', '')}\nA: {response}\n\n"
+                    # Check if response has substantial content (more than just photo description)
+                    if len(response.split()) > 5:
+                        has_substantial_content = True
+                    if m.get("photo_caption"):
+                        photo_path = m.get('photos', [None])[0]
+                        photo_info += f"[Photo Caption: {m.get('photo_caption')}]\n[Photo Path: {photo_path}]\n"
 
+            if not qa_text.strip() or not has_substantial_content:
+                return f"No substantial content in {category}."
+
+            style_desc = self.styles.get(style, self.styles["memoir"])
+            chapter_title = category.replace("_", " ").title()
+
+            photo_section = f"\n\nPhotos in this chapter:\n{photo_info}" if photo_info else ""
+            
+            # Debug: Check if photo info is collected
+            if photo_info:
+                print(f"DEBUG: Photo captions found: {photo_info}")
+            
             prompt = f"""
-You are an empathetic biographer writing a beautiful life story.
-Convert the following Q&A format into a flowing, natural narrative story.
-Keep the tone authentic, warm, and emotionally engaging.
+You are a compassionate biographer writing a beautiful life story.
 
-Life Phase: {phase}
+Task: Convert the following Q&A into a flowing narrative chapter.
+
+Chapter: {chapter_title}
+Style: {style_desc}
 
 Q&A:
-{qa_text}
+{qa_text}{photo_section}
 
-Write in first person, as if the person is narrating their own memory.
-Make it read like a story, not an interview.
+CRITICAL Instructions:
+- ONLY use information explicitly provided in the Q&A above
+- DO NOT add fictional details, dates, places, names, or events
+- DO NOT make assumptions or create stories beyond what the user shared
+- If information is minimal, write a SHORT chapter based ONLY on what's provided
+- IMPORTANT: If there are photo captions listed above, you MUST weave them naturally into the narrative at the most appropriate point in the story
+- Include photo placeholder as: [Image: path][Caption: "caption text"]
+- Place the photo reference where it fits best contextually in the story flow
+- Write in first person ("I was born...")
+- Remove filler words but keep the person's authentic voice
+- Connect memories naturally with transitions
+- Make it read like a story, not an interview
+- Keep it warm and emotionally engaging
 """
 
             response = await client.chat.completions.create(
@@ -55,6 +90,44 @@ Make it read like a story, not an interview.
             
         except Exception as e:
             return f"Error: {str(e)}"
+
+    async def generate_full_story(self, user_id: str, session_id: str, style: str = "memoir") -> dict:
+        """Generate complete life story with all chapters."""
+        try:
+            session_data = memory_service.get_user_memories(user_id, session_id)
+            if not session_data:
+                return {"error": "No memories found for this session."}
+
+            chapters = {}
+            for category in session_data.keys():
+                chapter = await self.generate_chapter(user_id, session_id, category, style)
+                if not chapter.startswith("No ") and not chapter.startswith("Error"):
+                    chapters[category] = chapter
+
+            return {
+                "user_id": user_id,
+                "session_id": session_id,
+                "style": style,
+                "chapters": chapters,
+                "total_chapters": len(chapters)
+            }
+            
+        except Exception as e:
+            return {"error": str(e)}
+
+    async def generate_session_story(self, user_id: str, session_id: str) -> str:
+        """Generate a story for a specific session (legacy method)."""
+        result = await self.generate_full_story(user_id, session_id)
+        if "error" in result:
+            return result["error"]
+        
+        # Combine all chapters
+        story = ""
+        for category, chapter in result["chapters"].items():
+            title = category.replace("_", " ").title()
+            story += f"\n\n# {title}\n\n{chapter}"
+        
+        return story.strip()
 
 
 # Singleton
