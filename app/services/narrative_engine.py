@@ -36,7 +36,8 @@ class NarrativeEngine:
                     if len(response.split()) > 5:
                         has_substantial_content = True
                     if m.get("photo_caption"):
-                        photo_info += f"[Photo Caption: {m.get('photo_caption')}]\n"
+                        photo_path = m.get('photos', [None])[0]
+                        photo_info += f"[Photo Caption: {m.get('photo_caption')}]\n[Photo Path: {photo_path}]\n"
 
             if not qa_text.strip() or not has_substantial_content:
                 return f"No substantial content in {category}."
@@ -66,7 +67,8 @@ CRITICAL Instructions:
 - DO NOT add fictional details, dates, places, names, or events
 - DO NOT make assumptions or create stories beyond what the user shared
 - If information is minimal, write a SHORT chapter based ONLY on what's provided
-- IMPORTANT: If there are photo captions listed above, you MUST weave them naturally into the narrative at the most appropriate point in the story, and include the caption marker as: [Photo: "caption text"]
+- IMPORTANT: If there are photo captions listed above, you MUST weave them naturally into the narrative at the most appropriate point in the story
+- Include photo placeholder as: [Image: path][Caption: "caption text"]
 - Place the photo reference where it fits best contextually in the story flow
 - Write in first person ("I was born...")
 - Remove filler words but keep the person's authentic voice
