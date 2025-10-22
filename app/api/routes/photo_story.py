@@ -36,15 +36,23 @@ async def photo_question(
         if not session_id:
             session_id = str(uuid.uuid4())
 
-        # Save the uploaded image permanently
-        # Use a unique filename to avoid conflicts
+        # Save the uploaded image temporarily
         filename = f"{uuid.uuid4()}_{image.filename}"
-        file_path = os.path.join(IMAGE_DIR, filename)
-        with open(file_path, "wb") as f:
+        temp_file_path = os.path.join(IMAGE_DIR, filename)
+        with open(temp_file_path, "wb") as f:
             shutil.copyfileobj(image.file, f)
 
+        # Upload to Cloudinary and get URL
+        cloudinary_url = photo_service.upload_to_cloudinary(temp_file_path, user_id)
+        
         # Analyze photo using LLM to get a storytelling question
-        question = await photo_service.analyze_image(user_id, file_path)
+        question = await photo_service.analyze_image(user_id, temp_file_path)
+        
+        # Delete temporary local file after upload
+        try:
+            os.remove(temp_file_path)
+        except:
+            pass
 
         # Generate memory ID before saving
         memory_id = str(uuid.uuid4())
@@ -57,7 +65,7 @@ async def photo_question(
             "question": question,
             "response": "",
             "snippet": snippet,
-            "photos": [file_path],
+            "photos": [cloudinary_url],
             "photo_caption": None,
             "audio_clips": [],
             "contributors": [],
@@ -77,7 +85,7 @@ async def photo_question(
             "session_id": session_id,
             "memory_id": memory_id,  # ← Return this!
             "question": question,
-            "image_path": file_path
+            "image_path": cloudinary_url
         }
 
     except Exception as e:
@@ -127,8 +135,9 @@ async def photo_answer(
         if detected_category == "ASK_USER":
             detected_category = old_category  # Fallback to current category
         
-        # Generate caption from user's answer
-        caption = await photo_service.generate_caption(answer, target_memory.get("photos", [None])[0])
+        # Generate caption from user's answer (pass Cloudinary URL)
+        photo_url = target_memory.get("photos", [None])[0]
+        caption = await photo_service.generate_caption(answer, photo_url)
         
         # Update the memory with answer and caption
         target_memory["response"] = answer
