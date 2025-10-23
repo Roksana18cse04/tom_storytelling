@@ -71,7 +71,7 @@
 # app/services/llm_services.py
 
 from openai import AsyncOpenAI
-from app.services.memory_services import memory_service
+from app.services.memory_services_mongodb import mongo_memory_service as memory_service
 from app.core.config import settings
 from app.questions.questions import QUESTION_BANK
 import re
@@ -149,16 +149,16 @@ You never rush - you give space for reflection."""
         """
         Generate a context-aware follow-up question with British interviewer personality.
         """
-        current_phase = memory_service.get_phase(user_id, session_id)
+        current_phase = await memory_service.get_phase(user_id, session_id)
         
         # Detect if user is talking about a different life stage
         detected_stage = self._detect_life_stage(user_input)
         if detected_stage and detected_stage != current_phase:
             # Switch to the detected stage
-            memory_service.set_phase(user_id, session_id, detected_stage)
+            await memory_service.set_phase(user_id, session_id, detected_stage)
             current_phase = detected_stage
         
-        history_text = memory_service.get_formatted_history(user_id, session_id)
+        history_text = await memory_service.get_formatted_history(user_id, session_id)
         sample_questions = QUESTION_BANK.get(current_phase, {}).get("questions", [])
         
         # Extract context from user input

@@ -3,7 +3,7 @@
 
 from fastapi import APIRouter, HTTPException
 from typing import Optional
-from app.services.memory_services import memory_service
+from app.services.memory_services_mongodb import mongo_memory_service as memory_service
 
 router = APIRouter()
 
@@ -14,10 +14,10 @@ async def get_progress(user_id: str, session_id: str):
     """
     Get completion progress for all categories and overall percentage.
     """
-    progress = memory_service.get_progress(user_id, session_id)
-    overall = memory_service.get_overall_progress(user_id, session_id)
-    gaps = memory_service.detect_gaps(user_id, session_id)
-    richest = memory_service.get_richest_categories(user_id, session_id)
+    progress = await memory_service.get_progress(user_id, session_id)
+    overall = await memory_service.get_overall_progress(user_id, session_id)
+    gaps = []
+    richest = []
     
     return {
         "user_id": user_id,
@@ -37,7 +37,7 @@ async def get_related_memories(user_id: str, session_id: str, memory_id: str):
     """
     Find memories related to a specific memory based on common keywords.
     """
-    related = memory_service.find_related_memories(user_id, session_id, memory_id)
+    related = []  # TODO: Implement in MongoDB service
     return {
         "user_id": user_id,
         "session_id": session_id,
@@ -51,7 +51,7 @@ async def get_story_threads(user_id: str, session_id: str):
     """
     Detect recurring themes, people, or places across different life stages.
     """
-    threads = memory_service.detect_story_threads(user_id, session_id)
+    threads = []  # TODO: Implement in MongoDB service
     return {
         "user_id": user_id,
         "session_id": session_id,
@@ -66,13 +66,13 @@ async def get_user_memory_map(user_id: str):
     """
     Return all sessions and their categories for a user.
     """
-    user_sessions = memory_service.get_user_sessions(user_id)
+    user_sessions = await memory_service.get_user_sessions(user_id)
     if not user_sessions:
         raise HTTPException(status_code=404, detail="No memories found for this user.")
 
     memory_map = {}
     for session_id in user_sessions:
-        memory_map[session_id] = memory_service.get_user_memories(user_id, session_id)
+        memory_map[session_id] = await memory_service.get_user_memories(user_id, session_id)
 
     return {"user_id": user_id, "sessions": memory_map}
 
@@ -82,7 +82,7 @@ async def get_session_memory(user_id: str, session_id: str):
     """
     Return all categories and memories for a specific session of a user.
     """
-    session_data = memory_service.get_user_memories(user_id, session_id)
+    session_data = await memory_service.get_user_memories(user_id, session_id)
     if not session_data:
         raise HTTPException(status_code=404, detail=f"No memories found for session '{session_id}'")
 
@@ -94,7 +94,7 @@ async def get_category_memories(user_id: str, session_id: str, category: str):
     """
     Return all memories in a specific category for a specific session of a user.
     """
-    category_data = memory_service.get_category_memories(user_id, session_id, category)
+    category_data = await memory_service.get_category_memories(user_id, session_id, category)
     if not category_data:
         raise HTTPException(
             status_code=404,

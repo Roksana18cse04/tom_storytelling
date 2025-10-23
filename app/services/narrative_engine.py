@@ -1,4 +1,4 @@
-from app.services.memory_services import memory_service
+from app.services.memory_services_mongodb import mongo_memory_service as memory_service
 from openai import AsyncOpenAI
 from app.core.config import settings
 
@@ -20,7 +20,7 @@ class NarrativeEngine:
     async def generate_chapter(self, user_id: str, session_id: str, category: str, style: str = "memoir") -> str:
         """Generate a narrative chapter for a specific category."""
         try:
-            memories = memory_service.get_category_memories(user_id, session_id, category)
+            memories = await memory_service.get_category_memories(user_id, session_id, category)
             if not memories:
                 return f"No memories found for {category}."
 
@@ -94,7 +94,7 @@ CRITICAL Instructions:
     async def generate_full_story(self, user_id: str, session_id: str, style: str = "memoir") -> dict:
         """Generate complete life story with all chapters."""
         try:
-            session_data = memory_service.get_user_memories(user_id, session_id)
+            session_data = await memory_service.get_user_memories(user_id, session_id)
             if not session_data:
                 return {"error": "No memories found for this session."}
 
