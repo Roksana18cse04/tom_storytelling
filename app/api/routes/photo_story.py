@@ -6,7 +6,7 @@ import uuid
 import datetime
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from app.services.photo_service import photo_service
-from app.services.memory_services import memory_service
+from app.services.memory_services_mongodb import mongo_memory_service as memory_service
 from typing import Optional
 import logging
 from fastapi import UploadFile
@@ -36,48 +36,45 @@ async def photo_question(
         if not session_id:
             session_id = str(uuid.uuid4())
 
-        # Save the uploaded image permanently
-        # Use a unique filename to avoid conflicts
+        # Save the uploaded image temporarily
         filename = f"{uuid.uuid4()}_{image.filename}"
-        file_path = os.path.join(IMAGE_DIR, filename)
-        with open(file_path, "wb") as f:
+        temp_file_path = os.path.join(IMAGE_DIR, filename)
+        with open(temp_file_path, "wb") as f:
             shutil.copyfileobj(image.file, f)
 
-        # Analyze photo using LLM to get a storytelling question
-        question = await photo_service.analyze_image(user_id, file_path)
-
-        # Generate memory ID before saving
-        memory_id = str(uuid.uuid4())
-
-        # Save question + image to memory under the session
-        # We need to manually create the entry to get the ID
-        snippet = memory_service._generate_snippet("")
-        entry = {
-            "id": memory_id,
-            "question": question,
-            "response": "",
-            "snippet": snippet,
-            "photos": [file_path],
-            "photo_caption": None,
-            "audio_clips": [],
-            "contributors": [],
-            "timestamp": datetime.datetime.now().isoformat()
-        }
+        # Upload to Cloudinary and get URL
+        cloudinary_url = photo_service.upload_to_cloudinary(temp_file_path, user_id)
         
+        # Analyze photo using LLM to get a storytelling question
+        question = await photo_service.analyze_image(user_id, temp_file_path)
+        
+        # Delete temporary local file after upload
+        try:
+            os.remove(temp_file_path)
+        except:
+            pass
+
         # Get user's current phase/category
-        category = memory_service.get_phase(user_id, session_id)
+        category = await memory_service.get_phase(user_id, session_id)
         if not category:
             category = "early adulthood"  # Default if no phase set
         
-        memory_service.memory_map.setdefault(user_id, {}).setdefault(session_id, {}).setdefault(category, []).append(entry)
-        memory_service._save_memory()
+        # Save to MongoDB and get the generated memory_id
+        memory_id = await memory_service.add_memory(
+            user_id=user_id,
+            session_id=session_id,
+            category=category,
+            question=question,
+            response="",
+            photos=[cloudinary_url]
+        )
 
         return {
             "user_id": user_id,
             "session_id": session_id,
             "memory_id": memory_id,  # ← Return this!
             "question": question,
-            "image_path": file_path
+            "image_path": cloudinary_url
         }
 
     except Exception as e:
@@ -106,13 +103,13 @@ async def photo_answer(
             raise HTTPException(status_code=400, detail="Either text or audio must be provided")
         
         # Get the memory with the photo from all categories
-        session_data = memory_service.get_user_memories(user_id, session_id)
+        session_data = await memory_service.get_user_memories(user_id, session_id)
         
         target_memory = None
         old_category = None
         for category, memories in session_data.items():
             for mem in memories:
-                if mem["id"] == memory_id:
+                if mem["_id"] == memory_id:
                     target_memory = mem
                     old_category = category
                     break
@@ -127,20 +124,21 @@ async def photo_answer(
         if detected_category == "ASK_USER":
             detected_category = old_category  # Fallback to current category
         
-        # Generate caption from user's answer
-        caption = await photo_service.generate_caption(answer, target_memory.get("photos", [None])[0])
+        # Generate caption from user's answer (pass Cloudinary URL)
+        photo_url = target_memory.get("photos", [None])[0]
+        caption = await photo_service.generate_caption(answer, photo_url)
         
-        # Update the memory with answer and caption
-        target_memory["response"] = answer
-        target_memory["snippet"] = memory_service._generate_snippet(answer)
-        target_memory["photo_caption"] = caption
-        
-        # Move to detected category if different
-        if detected_category != old_category:
-            memory_service.memory_map[user_id][session_id][old_category].remove(target_memory)
-            memory_service.memory_map[user_id][session_id].setdefault(detected_category, []).append(target_memory)
-        
-        memory_service._save_memory()
+        # Update the memory in MongoDB
+        from app.core.database import memories_collection
+        await memories_collection.update_one(
+            {"_id": memory_id},
+            {"$set": {
+                "response": answer,
+                "snippet": memory_service._generate_snippet(answer),
+                "photo_caption": caption,
+                "category": detected_category
+            }}
+        )
         
         return {
             "user_id": user_id,

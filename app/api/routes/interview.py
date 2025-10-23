@@ -2,7 +2,7 @@
 from fastapi import APIRouter, UploadFile, Form, HTTPException
 from app.services.llm_services import LLMService
 from app.services.transcription_services import transcribe_audio
-from app.services.memory_services import memory_service
+from app.services.memory_services_mongodb import mongo_memory_service as memory_service
 from app.questions.questions import QUESTION_BANK
 from typing import Optional
 import logging
@@ -28,7 +28,7 @@ async def interview(
             raise HTTPException(status_code=400, detail="Either text or audio must be provided.")
 
         # Get or detect initial phase
-        category = memory_service.get_phase(user_id, session_id)
+        category = await memory_service.get_phase(user_id, session_id)
         if category is None:
             # First interaction - detect phase from user input
             category = memory_service.detect_initial_phase(text)
@@ -47,14 +47,14 @@ async def interview(
                     "awaiting_phase_selection": True,
                     "current_category": None
                 }
-            memory_service.set_phase(user_id, session_id, category)
+            await memory_service.set_phase(user_id, session_id, category)
         else:
             # Existing session - check if user is talking about different stage
             detected_stage = llm._detect_life_stage(text)
             if detected_stage and detected_stage != category:
-                memory_service.set_phase(user_id, session_id, detected_stage)
+                await memory_service.set_phase(user_id, session_id, detected_stage)
                 category = detected_stage
-        user_data = memory_service.get_user_memories(user_id, session_id)
+        user_data = await memory_service.get_user_memories(user_id, session_id)
         
         # Handle phase selection from user
         phase_map = {
@@ -70,7 +70,7 @@ async def interview(
         text_lower = text.lower().strip()
         if category is None and text_lower in phase_map:
             category = phase_map[text_lower]
-            memory_service.set_phase(user_id, session_id, category)
+            await memory_service.set_phase(user_id, session_id, category)
             return {
                 "response": f"Wonderful! Let's explore your {category.replace('_', ' ')}. What would you like to share first?",
                 "current_category": category,
@@ -96,7 +96,7 @@ async def interview(
                 "is_reminder": True
             }
 
-        memory_service.add_memory(
+        await memory_service.add_memory(
             user_id=user_id,
             session_id=session_id,
             category=category,
@@ -117,14 +117,14 @@ async def interview(
             current_index = all_phases.index(category)
             if current_index + 1 < len(all_phases):
                 next_phase = all_phases[current_index + 1]
-                memory_service.set_phase(user_id, session_id, next_phase)
+                await memory_service.set_phase(user_id, session_id, next_phase)
                 should_advance = True
                 category = next_phase
         
         followup = await llm.generate_followup(user_id, session_id, text)
         
         # Get updated category after followup (in case it changed)
-        updated_category = memory_service.get_phase(user_id, session_id)
+        updated_category = await memory_service.get_phase(user_id, session_id)
         
         response_data = {
             "response": followup,

@@ -1,36 +1,26 @@
-# Environment variables
-.env
-
-# Python virtual environments
-venv/
-.venv/
-
-# Python cache files
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.Python
+venv/
+env/
+.venv
 
-# Distribution / packaging
-build/
-dist/
-*.egg-info/
-*.egg
+# Environment variables
+.env
 
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints/
+# Local data
+memory.json
+user_images/
 
-# VSCode settings
+# IDE
 .vscode/
+.idea/
+*.swp
+*.swo
 
-# Logs and local data
-*.log
-*.sqlite3
-
-# Local configuration and testing
+# OS
 .DS_Store
-.env.local
-.env.*.local
-
-# Editable install reference (if present)
--e .
+Thumbs.db
