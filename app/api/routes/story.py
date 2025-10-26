@@ -10,7 +10,7 @@ async def generate_chapter(
     user_id: str, 
     session_id: str, 
     category: str,
-    style: str = Query("memoir", description="Style: memoir or biography")
+    style: str = Query("conversational", description="Style: conversational, literary, formal, reflective, light_hearted or concise")
 ):
     """Generate a narrative chapter for a specific category."""
     chapter = await narrative_engine.generate_chapter(user_id, session_id, category, style)
@@ -29,7 +29,7 @@ async def generate_chapter(
 async def generate_full_story(
     user_id: str,
     session_id: str,
-    style: str = Query("memoir", description="Style: memoir or biography")
+    style: str = Query("conversational", description="Style: conversational, literary, formal, reflective, light_hearted or concise")
 ):
     """Generate complete life story with all chapters."""
     result = await narrative_engine.generate_full_story(user_id, session_id, style)

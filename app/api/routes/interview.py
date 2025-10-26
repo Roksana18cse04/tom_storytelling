@@ -48,12 +48,7 @@ async def interview(
                     "current_category": None
                 }
             await memory_service.set_phase(user_id, session_id, category)
-        else:
-            # Existing session - check if user is talking about different stage
-            detected_stage = llm._detect_life_stage(text)
-            if detected_stage and detected_stage != category:
-                await memory_service.set_phase(user_id, session_id, detected_stage)
-                category = detected_stage
+        
         user_data = await memory_service.get_user_memories(user_id, session_id)
         
         # Handle phase selection from user
@@ -68,14 +63,47 @@ async def interview(
         }
         
         text_lower = text.lower().strip()
-        if category is None and text_lower in phase_map:
-            category = phase_map[text_lower]
+        
+        # Check if user is EXPLICITLY requesting phase change
+        explicit_phase_keywords = ["go with", "shift to", "move to", "talk about", "explore", "let's discuss", 
+                                   "want to share", "tell about", "switch to", "change to", "start with", "want to shear {phase_map} memory"]
+        is_explicit_phase_request = any(keyword in text_lower for keyword in explicit_phase_keywords)
+        
+        # Only detect phase change if it's an explicit request
+        detected_phase = None
+        if is_explicit_phase_request:
+            for key, phase in phase_map.items():
+                if key in text_lower:
+                    detected_phase = phase
+                    break
+        
+        if detected_phase and detected_phase != category:
+            # User explicitly wants to switch phase
+            category = detected_phase
             await memory_service.set_phase(user_id, session_id, category)
-            return {
-                "response": f"Wonderful! Let's explore your {category.replace('_', ' ')}. What would you like to share first?",
-                "current_category": category,
-                "phase_selected": True
-            }
+            
+            # Get first question from new phase
+            core_questions = QUESTION_BANK.get(category, {}).get("questions", [])
+            if core_questions:
+                first_question = core_questions[0]
+                await memory_service.add_memory(
+                    user_id=user_id,
+                    session_id=session_id,
+                    category=category,
+                    question=first_question,
+                    response=""
+                )
+                return {
+                    "response": f"Wonderful! Let's explore your {category.replace('_', ' ')}. {first_question}",
+                    "current_category": category,
+                    "phase_selected": True
+                }
+            else:
+                return {
+                    "response": f"Wonderful! Let's explore your {category.replace('_', ' ')}. What would you like to share first?",
+                    "current_category": category,
+                    "phase_selected": True
+                }
         
         # Check for unanswered question
         last_question = None
@@ -103,25 +131,66 @@ async def interview(
             question=last_question or "Free Talk",     
             response=text,
         )
-
-        # Check if current phase has enough responses
-        answered_count = len([m for m in user_data.get(category, []) if m["response"].strip()])
-        
-        # Get threshold for current phase
-        phase_threshold = len(QUESTION_BANK[category]["questions"]) if category in QUESTION_BANK else DEFAULT_MIN_QUESTIONS
-        
-        # Auto-advance to next phase if threshold met
-        should_advance = False
-        if answered_count >= phase_threshold:
-            all_phases = list(QUESTION_BANK.keys())
-            current_index = all_phases.index(category)
-            if current_index + 1 < len(all_phases):
-                next_phase = all_phases[current_index + 1]
-                await memory_service.set_phase(user_id, session_id, next_phase)
-                should_advance = True
-                category = next_phase
         
         followup = await llm.generate_followup(user_id, session_id, text)
+        
+        # Check if phase is complete
+        if followup == "PHASE_COMPLETE":
+            # Calculate progress for all phases
+            all_phases = list(QUESTION_BANK.keys())
+            phase_progress = {}
+            
+            for phase in all_phases:
+                phase_data = user_data.get(phase, [])
+                total_questions = len(QUESTION_BANK[phase]["questions"])
+                answered = len([m for m in phase_data if m.get("response", "").strip() and len(m.get("response", "").split()) > 5])
+                progress = (answered / total_questions * 100) if total_questions > 0 else 0
+                phase_progress[phase] = {"progress": progress, "answered": answered, "total": total_questions}
+            
+            # Find phases with least progress (excluding current)
+            incomplete_phases = [(p, data) for p, data in phase_progress.items() 
+                               if p != category and data["progress"] < 100]
+            incomplete_phases.sort(key=lambda x: x[1]["progress"])
+            
+            if incomplete_phases:
+                # Suggest incomplete phases naturally
+                suggestions = incomplete_phases[:3]
+                phase_names = [p.replace('_', ' ') for p, _ in suggestions]
+                
+                # Create natural suggestion text
+                if len(phase_names) == 1:
+                    suggestion_text = phase_names[0]
+                elif len(phase_names) == 2:
+                    suggestion_text = f"{phase_names[0]} or {phase_names[1]}"
+                else:
+                    suggestion_text = f"{', '.join(phase_names[:-1])}, or {phase_names[-1]}"
+                
+                return {
+                    "response": f"Thank you for sharing those wonderful memories about your {category.replace('_', ' ')}. "
+                               f"If you'd like, we could explore your {suggestion_text} next. "
+                               f"Which would you prefer?",
+                    "current_category": category,
+                    "phase_complete": True,
+                    "suggested_phases": [p for p, _ in suggestions],
+                    "progress": phase_progress
+                }
+            else:
+                # All phases complete!
+                return {
+                    "response": "What a wonderful journey through your life story! You've shared so many beautiful memories. "
+                               "Is there anything else you'd like to add or any phase you'd like to revisit?",
+                    "current_category": category,
+                    "all_phases_complete": True
+                }
+        
+        # Save the AI's question to memory (so next time we know what was asked)
+        await memory_service.add_memory(
+            user_id=user_id,
+            session_id=session_id,
+            category=category,
+            question=followup,
+            response=""
+        )
         
         # Get updated category after followup (in case it changed)
         updated_category = await memory_service.get_phase(user_id, session_id)
@@ -129,15 +198,8 @@ async def interview(
         response_data = {
             "response": followup,
             "current_category": updated_category,
-            "memory_saved": True,
-            "answered_in_phase": answered_count
+            "memory_saved": True
         }
-        
-        # Add phase transition message if advanced
-        if should_advance:
-            phase_name = updated_category.replace("_", " ").title()
-            response_data["phase_transition"] = True
-            response_data["response"] = f"That's wonderful. We've covered quite a bit about that time in your life. Now, let's move on to {phase_name}. {followup}"
         
         return response_data
 

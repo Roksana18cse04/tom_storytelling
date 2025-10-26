@@ -19,7 +19,7 @@ QUESTION_BANK = {
             "What’s a family tradition or routine you remember from childhood?",
             "Tell me about a moment that made you feel especially happy as a child."
         ]
-    },
+    },  
     "teenage years": {
         "aim": "capture first independence, friendships, identity",
         "questions": [

@@ -42,7 +42,7 @@ class PhotoService:
 
     async def analyze_image(self, user_id: str, file_path: str) -> str:
         """
-        Analyze the photo and return a follow-up question for the user to narrate a memory.
+        Analyze the photo and return a simple, warm opening question.
         """
         try:
             # Read and encode image as base64
@@ -57,7 +57,23 @@ class PhotoService:
                         "content": [
                             {
                                 "type": "text",
-                                "text": "You are a compassionate British interviewer. Analyze this photo and generate ONE thoughtful, open-ended question that encourages the user to tell a story or memory related to it. Respond ONLY with the question text."
+                                "text": """You are a warm, thoughtful British interviewer helping someone capture their life story.
+
+Analyze this photo and generate ONE comprehensive opening question that invites the user to share the full story.
+
+Your question should:
+- Acknowledge what you see in the photo
+- Ask for WHO, WHAT, WHERE, WHEN, and WHICH LIFE PHASE in a natural, conversational way
+- Be warm and inviting (2-3 sentences max)
+
+Life phases to mention: childhood, teenage years, early adulthood, career/work life, family life, hobbies/adventures, or later life
+
+Examples:
+- "I can see what looks like a lovely family moment. Can you tell me who's in this photo, where and when it was taken, which phase of your life this was from, and what was happening?"
+- "This looks like a special celebration. Who were you with, where was this, what phase of life were you in, and what's the story behind this moment?"
+- "What a beautiful setting. Can you share who you were with, where this was, when it happened, which stage of your life this represents, and what made it memorable?"
+
+Generate ONE comprehensive opening question that asks for WHO, WHAT, WHERE, WHEN, and WHICH LIFE PHASE:"""
                             },
                             {
                                 "type": "image_url",
@@ -66,7 +82,7 @@ class PhotoService:
                         ]
                     }
                 ],
-                temperature=0.6,
+                temperature=0.7,
             )
 
             question = response.choices[0].message.content.strip()
@@ -74,50 +90,180 @@ class PhotoService:
 
         except Exception:
             logger.exception("Failed to analyze image.")
-            return "Could not generate a question from this photo."
+            return "Can you tell me about this photo?"
+    
+    async def generate_photo_followup(self, image_url: str, conversation_history: list, user_answer: str, followup_number: int) -> str:
+        """
+        Generate structured follow-up questions based on photo and user's answer.
+        Follows a systematic approach: Context → Sensory → Emotional → Significance
+        """
+        try:
+            # Build conversation context
+            history_text = "\n".join([
+                f"Q: {item['question']}\nA: {item['answer']}"
+                for item in conversation_history
+            ])
+            
+            # Analyze user's answer to extract entities
+            entities_prompt = f"""Analyze this answer and identify:
+- People mentioned (names, relationships)
+- Places mentioned (locations, settings)
+- Time references (when, what year, season)
+- Emotions expressed (feelings, mood)
+
+Answer: "{user_answer}"
+
+List what you found (brief):"""
+            
+            # Determine follow-up focus based on number (structured approach)
+            if followup_number == 1:
+                focus_area = """First follow-up - Focus on WHO/WHAT:
+- "Who is shown in this photo?"
+- "Who else was there with you?"
+- "What was happening in this moment?"
+- Extract people, relationships, and what was occurring"""
+            elif followup_number == 2:
+                focus_area = """Second follow-up - Focus on WHEN/WHERE:
+- "When was this taken? What year or season?"
+- "Where exactly was this? Can you describe the place?"
+- "What was the occasion or event?"
+- Extract temporal and spatial context"""
+            elif followup_number == 3:
+                focus_area = """Third follow-up - Focus on SENSORY DETAILS:
+- "What do you remember about that day?"
+- "What did you see, hear, smell, or feel?"
+- "Can you picture the atmosphere?"
+- Encourage vivid sensory recall (sights, sounds, smells, textures)"""
+            else:  # followup_number == 4
+                focus_area = """Fourth follow-up - Focus on EMOTION and SIGNIFICANCE:
+- "How did this moment feel?"
+- "Why does this photo stand out to you?"
+- "What made this moment special or meaningful?"
+- Explore emotional resonance and personal significance
+- Detect emotional language and respond empathetically
+- If sadness/loss detected: "That must have been difficult. Would you like to share more, or shall we move on?"""
+            
+            response = await client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": f"""You are a warm, empathetic British interviewer helping capture life stories.
+
+Photo conversation so far:
+{history_text}
+
+User's latest answer: "{user_answer}"
+
+{focus_area}
+
+Generate ONE specific follow-up question that:
+1. Builds on what they've shared
+2. Encourages deeper storytelling
+3. Uses warm, British phrasing
+4. Is empathetic if emotional language detected
+
+Examples based on follow-up number:
+
+Follow-up 1 (Who/What):
+- "Who else was with you in this photo?"
+- "Can you tell me about the people shown here?"
+- "What was happening at this moment?"
+
+Follow-up 2 (When/Where):
+- "When was this taken? What year or season?"
+- "Where exactly was this? Can you describe the place?"
+- "What was the occasion?"
+
+Follow-up 3 (Sensory):
+- "What do you remember most vividly - the sights, sounds, or atmosphere?"
+- "Can you picture what it looked like? What you could hear?"
+- "What was the feeling in the air that day?"
+
+Follow-up 4 (Emotional/Significance):
+- "How did this moment make you feel?"
+- "Why does this photo stand out in your memory?"
+- "What made this moment special to you?"
+- If emotional: "That must have been [difficult/joyful]. Would you like to share more?"
+
+Generate ONE warm, specific follow-up question:"""
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": image_url}
+                            }
+                        ]
+                    }
+                ],
+                temperature=0.7,
+            )
+
+            followup = response.choices[0].message.content.strip()
+            return followup
+
+        except Exception:
+            logger.exception("Failed to generate photo follow-up.")
+            return None
 
     async def generate_caption(self, user_story: str, image_url: str = None) -> str:
         """
-        Generate a concise caption for the photo based on user's story.
+        Return Null - no caption generation.
         """
-        try:
-            if image_url and image_url.startswith("http"):
-                # Use Cloudinary URL directly
-                response = await client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": [
-                                {
-                                    "type": "text",
-                                    "text": f"Analyze this photo and the user's story to generate a SHORT, meaningful caption (max 10-15 words). Include key details like year, people, place, or event if mentioned.\n\nUser's story: {user_story}\n\nGenerate ONLY the caption text."
-                                },
-                                {
-                                    "type": "image_url",
-                                    "image_url": {"url": image_url}
-                                }
-                            ]
-                        }
-                    ],
-                    temperature=0.5,
-                )
-            else:
-                # Text-only caption generation
-                response = await client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[
-                        {"role": "user", "content": f"Generate a SHORT caption (max 10-15 words) based on this story: {user_story}"}
-                    ],
-                    temperature=0.5,
-                )
-
-            caption = response.choices[0].message.content.strip()
-            return caption
-
-        except Exception:
-            logger.exception("Failed to generate caption.")
-            return "Untitled memory"
+        return "Null"
+    
+    def _needs_depth_exploration(self, text: str, conversation_history: list = None) -> bool:
+        """Check if response has enough detail or needs follow-up based on missing context."""
+        text_lower = text.lower()
+        word_count = len(text.split())
+        
+        # Specific location keywords (cities, landmarks, specific places)
+        specific_locations = ["district", "mountain", "park", "beach", "lake", "forest", "hill", 
+                            "valley", "coast", "village", "town", "city", "country", "region"]
+        
+        # Check for specific context elements
+        has_who = any(word in text_lower for word in ["friend", "family", "partner", "with", "people", "name", "leo", "sarah"])
+        has_when = any(word in text_lower for word in ["year", "month", "season", "time", "when", "age", "university", "school", "2018", "2019"])
+        
+        # WHERE needs specific location, not just generic words
+        has_specific_where = any(word in text_lower for word in specific_locations)
+        
+        # Sensory details (vivid descriptions)
+        has_sensory = any(word in text_lower for word in ["looked", "sounded", "smelled", "saw", "heard", "view", "sunset", "sunrise", "color", "sound", "smell"])
+        
+        # Emotional depth
+        has_emotion = any(word in text_lower for word in ["felt", "feeling", "happy", "sad", "excited", "memorable", "unforgettable", "laughed", "joy", "love"])
+        
+        # If conversation history exists, check cumulative context
+        if conversation_history:
+            history_text = " ".join([item.get("answer", "") for item in conversation_history])
+            history_lower = history_text.lower()
+            
+            # Check what's present in entire conversation
+            has_who = has_who or any(word in history_lower for word in ["friend", "family", "partner", "with", "leo", "sarah"])
+            has_when = has_when or any(word in history_lower for word in ["year", "month", "season", "when", "university", "2018"])
+            has_specific_where = has_specific_where or any(word in history_lower for word in specific_locations)
+            has_sensory = has_sensory or any(word in history_lower for word in ["looked", "sounded", "saw", "heard", "view", "sunset"])
+            has_emotion = has_emotion or any(word in history_lower for word in ["felt", "feeling", "happy", "memorable", "unforgettable"])
+        
+        # Very short response always needs follow-up
+        if word_count < 15:
+            return True
+        
+        # If response is rich (100+ words) with BOTH sensory AND emotional depth, accept it
+        if word_count >= 100 and has_sensory and has_emotion:
+            return False
+        
+        # Missing critical context (WHO, WHEN, or SPECIFIC WHERE)
+        missing_context = not (has_who and has_when and has_specific_where)
+        
+        # Missing depth (sensory AND emotional detail)
+        missing_depth = not (has_sensory and has_emotion)
+        
+        # Need follow-up if missing context OR missing depth
+        return missing_context or missing_depth
 
 
 

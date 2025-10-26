@@ -134,7 +134,7 @@ class LLMService:
     def _get_british_system_prompt(self) -> str:
         """British interviewer personality."""
         return """You are a warm, thoughtful British interviewer helping someone record their life story.
-        
+
 Your tone is:
         - Gentle and encouraging, never over-enthusiastic
         - Respectful and curious, like a trusted companion
@@ -145,61 +145,125 @@ You ask open-ended questions that invite detail. If someone gives a brief answer
 You use British phrasing naturally (e.g., "That sounds special", "What do you remember about...").
 You never rush - you give space for reflection."""
 
+    async def _needs_depth_exploration(self, user_input: str) -> bool:
+        """Check if response has enough detail or needs follow-up."""
+        # Rich response indicators
+        rich_indicators = ["remember", "felt", "looked", "sounded", "smelled", "because", "when", "where", "who"]
+        has_detail = any(indicator in user_input.lower() for indicator in rich_indicators)
+        word_count = len(user_input.split())
+        
+        # Needs depth if: short response OR lacks sensory/emotional detail
+        return word_count < 20 or not has_detail
+
+    async def _count_followups_for_core_question(self, category_memories: list, core_question: str) -> int:
+        """Count how many follow-ups have been asked for a specific core question."""
+        count = 0
+        found_core = False
+        
+        for mem in category_memories:
+            q = mem.get("question", "")
+            if q == core_question:
+                found_core = True
+            elif found_core:
+                # If we found the core question, count subsequent questions until next core
+                if q in QUESTION_BANK.get(mem.get("category", ""), {}).get("questions", []):
+                    break  # Hit next core question
+                count += 1
+        
+        return count
+
     async def generate_followup(self, user_id: str, session_id: str, user_input: str) -> str:
         """
-        Generate a context-aware follow-up question with British interviewer personality.
+        Generate follow-up: Core questions (spine) + Max 2-3 dynamic depth questions.
         """
+        MAX_FOLLOWUPS_PER_CORE = 2  # Maximum follow-ups per core question
+        
         current_phase = await memory_service.get_phase(user_id, session_id)
         
-        # Detect if user is talking about a different life stage
-        detected_stage = self._detect_life_stage(user_input)
-        if detected_stage and detected_stage != current_phase:
-            # Switch to the detected stage
-            await memory_service.set_phase(user_id, session_id, detected_stage)
-            current_phase = detected_stage
+        # Get conversation history and core questions
+        session_data = await memory_service.get_user_memories(user_id, session_id)
+        category_memories = session_data.get(current_phase, [])
+        core_questions = QUESTION_BANK.get(current_phase, {}).get("questions", [])
         
-        history_text = await memory_service.get_formatted_history(user_id, session_id)
-        sample_questions = QUESTION_BANK.get(current_phase, {}).get("questions", [])
+        # Find which core questions have been ANSWERED (not just asked)
+        answered_core_questions = set()
+        for mem in category_memories:
+            q = mem.get("question")
+            r = mem.get("response", "").strip()
+            if q in core_questions and r:  # Has response
+                answered_core_questions.add(q)
         
-        # Extract context from user input
+        unanswered_core = [q for q in core_questions if q not in answered_core_questions]
+        
+        # Get last memory
+        last_memory = category_memories[-1] if category_memories else None
+        last_question = last_memory.get("question") if last_memory else None
+        last_response = last_memory.get("response", "").strip() if last_memory else ""
+        
+        # Find which core question we're currently exploring
+        current_core_question = None
+        for mem in reversed(category_memories):
+            if mem.get("question") in core_questions:
+                current_core_question = mem.get("question")
+                break
+        
+        # Count follow-ups for current core question
+        followup_count = 0
+        if current_core_question:
+            followup_count = await self._count_followups_for_core_question(category_memories, current_core_question)
+        
+        # Extract context
         self._extract_context(user_id, session_id, user_input)
         
-        # Check if response is vague
-        is_vague = self._is_vague_response(user_input)
+        # Decision: Core question OR Dynamic follow-up?
+        needs_depth = await self._needs_depth_exploration(user_input)
+        is_core_question = last_question in core_questions if last_question else False
+        just_answered_core = is_core_question and last_response
         
-        if is_vague:
+        # Debug logging
+        print(f"DEBUG: current_core_question={current_core_question}")
+        print(f"DEBUG: followup_count={followup_count}")
+        print(f"DEBUG: needs_depth={needs_depth}")
+        print(f"DEBUG: answered_core_questions={len(answered_core_questions)}/{len(core_questions)}")
+        
+        # Check if we should generate follow-up or move to next core
+        if just_answered_core and needs_depth and followup_count < MAX_FOLLOWUPS_PER_CORE:
+            # Generate dynamic follow-up to deepen current core question
+            print(f"DEBUG: Generating follow-up {followup_count + 1}/{MAX_FOLLOWUPS_PER_CORE}")
             prompt = f"""
-            The user gave a brief response: "{user_input}"
-            
-            Current conversation phase: {current_phase}
-            Recent conversation:
-            {history_text[-500:] if len(history_text) > 500 else history_text}
-            
-            Generate a gentle follow-up that encourages them to share more detail.
-            Examples: "That sounds special. Who was with you that day?" or "What emotions do you remember feeling?"
-            
-            Respond with ONE warm, specific follow-up question only.
-            """
-        else:
-            prompt = f"""
-            Current life story phase: {current_phase}
-            
-            Conversation so far:
-            {history_text}
-            
-            User's latest response: "{user_input}"
-            
-            Sample questions for this phase:
-            {sample_questions[:5]}
-            
-            Based on what they've shared, generate ONE natural follow-up question that:
-            - Builds on their response
-            - Invites deeper reflection or moves the story forward
-            - Feels like a caring friend asking, not an interrogation
-            
-            Respond with the question only.
-            """
+You are a warm British interviewer helping capture life stories.
 
+Core question asked: "{last_question}"
+User's response: "{user_input}"
+
+Your task: Generate ONE dynamic follow-up question to explore this memory deeper.
+
+Focus on:
+- Sensory details (What did it look/sound/smell/feel like?)
+- Emotional resonance (How did that make you feel?)
+- Specific moments (Can you picture a particular moment?)
+- People involved (Who was there? What do you remember about them?)
+- Temporal anchoring (When was this? What time of year?)
+
+Examples:
+- "That sounds special - can you picture the room now? What did it look like?"
+- "You mentioned your friend Charlie - what stands out most about him?"
+- "How did that moment make you feel?"
+
+Generate ONE warm, specific follow-up question that encourages sensory and emotional detail.
+"""
+        else:
+            # Move to next core question or check phase completion
+            print("DEBUG: Moving to next core question")
+            if unanswered_core:
+                next_core = unanswered_core[0]
+                print(f"DEBUG: Next core question: {next_core}")
+                return next_core
+            else:
+                # All core questions done - check for incomplete phases
+                print("DEBUG: Phase complete, checking other phases")
+                return "PHASE_COMPLETE"  # Signal to interview route
+        
         response = await client.chat.completions.create(
             model=self.model,
             messages=[
@@ -210,7 +274,7 @@ You never rush - you give space for reflection."""
         )
 
         followup = response.choices[0].message.content.strip()
-        memory_service.add_message(user_id, session_id, "Assistant", followup)
+        await memory_service.add_message(user_id, session_id, "Assistant", followup)
         return followup
 
 

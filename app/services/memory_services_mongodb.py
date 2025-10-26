@@ -38,9 +38,9 @@ class MongoMemoryService:
             "teenage years": ["teenage", "teen", "high school", "secondary", "adolescent"],
             "early adulthood": ["university", "college", "first job", "twenties", "young adult", "early adult"],
             "career work": ["career", "work", "job", "professional", "employed", "business"],
-            "relationships & family": ["married", "wedding", "spouse", "children", "parent"],
+            "relationships & family": ["married", "wedding", "spouse", "children", "parent", "relationship"],
             "hobbies & adventures": ["travel", "trip", "journey", "vacation", "adventure", "hobby", "visited"],
-            "later life & reflections": ["retired", "retirement", "grandchildren", "looking back"]
+            "later life & reflections": ["later life", "reflection", "retired", "retirement", "grandchildren", "looking back", "legacy", "advice"]
         }
         
         for phase, keywords in stage_map.items():
