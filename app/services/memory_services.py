@@ -45,13 +45,15 @@ class MemoryService:
         
         # Life stage keywords (check FIRST before vague intent check)
         stage_map = {
-            "childhood": ["child", "kid", "young", "elementary", "primary school", "grew up", "born"],
-            "teenage years": ["teenage", "teen", "high school", "secondary", "adolescent"],
-            "early adulthood": ["university", "college", "first job", "twenties", "young adult", "early adult"],
-            "career work": ["career", "work", "job", "professional", "employed", "business"],
-            "relationships & family": ["married", "wedding", "spouse", "children", "parent"],
-            "hobbies & adventures": ["travel", "trip", "journey", "vacation", "adventure", "hobby", "visited"],
-            "later life & reflections": ["retired", "retirement", "grandchildren", "looking back"]
+            "childhood": ["childhood", "child", "kid", "young", "elementary", "primary school", "grew up"],
+            "teenage years": ["teenage", "teen", "adolescent", "high school", "secondary school", "teenager"],
+            "early adulthood": ["early adult", "young adult", "university", "college", "first job", "twenties"],
+            "career work": ["career", "work", "job", "professional", "office", "business", "employed"],
+            "relationships & family": ["married", "wedding", "spouse", "partner", "children", "parent", "family life"],
+            "hobbies & adventures": ["travel", "hobby", "adventure", "trip", "vacation", "journey", "visited", "tour"],
+            "home & community": ["moved", "neighborhood", "community", "hometown", "lived in"],
+            "challenges & growth": ["difficult", "struggle", "overcome", "challenge", "hardship"],
+            "later life & reflections": ["retired", "retirement", "grandchildren", "looking back", "reflection"]
         }
         
         for phase, keywords in stage_map.items():

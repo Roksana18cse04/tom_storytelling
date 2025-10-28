@@ -53,20 +53,22 @@ async def interview(
         
         # Handle phase selection from user
         phase_map = {
-            "1": "childhood", "childhood": "childhood",
-            "2": "teenage years", "teenage": "teenage years", "teen": "teenage years",
-            "3": "early adulthood", "early adult": "early adulthood", "adulthood": "early adulthood",
-            "4": "career work", "career": "career work", "work": "career work",
-            "5": "relationships & family", "relationship": "relationships & family", "family": "relationships & family",
-            "6": "hobbies & adventures", "hobbies": "hobbies & adventures", "hobby": "hobbies & adventures", "adventure": "hobbies & adventures",
-            "7": "later life & reflections", "later life": "later life & reflections", "reflection": "later life & reflections"
+            "childhood": ["childhood", "child", "kid", "young", "elementary", "primary school", "grew up"],
+            "teenage years": ["teenage", "teen", "adolescent", "high school", "secondary school", "teenager"],
+            "early adulthood": ["early adult", "young adult", "university", "college", "first job", "twenties"],
+            "career work": ["career", "work", "job", "professional", "office", "business", "employed"],
+            "relationships & family": ["married", "wedding", "spouse", "partner", "children", "parent", "family life"],
+            "hobbies & adventures": ["travel", "hobby", "adventure", "trip", "vacation", "journey", "visited", "tour"],
+            "home & community": ["moved", "neighborhood", "community", "hometown", "lived in"],
+            "challenges & growth": ["difficult", "struggle", "overcome", "challenge", "hardship"],
+            "later life & reflections": ["retired", "retirement", "grandchildren", "looking back", "reflection"]
         }
         
         text_lower = text.lower().strip()
         
         # Check if user is EXPLICITLY requesting phase change
-        explicit_phase_keywords = ["go with", "shift to", "move to", "talk about", "explore", "let's discuss", 
-                                   "want to share", "tell about", "switch to", "change to", "start with", "want to shear {phase_map} memory"]
+        explicit_phase_keywords = ["let's explore {phase_map} memory", "let's discuss {phase_map} memory","switch to {phase_map}","want to shear {phase_map} memory"]
+
         is_explicit_phase_request = any(keyword in text_lower for keyword in explicit_phase_keywords)
         
         # Only detect phase change if it's an explicit request
@@ -117,13 +119,17 @@ async def interview(
                     break
         
         # If returning user with unanswered question, remind them
-        if has_unanswered and text.lower().strip() in ["hi", "hello", "hey", "back", "continue", "previous"]:
+        if has_unanswered and text.lower().strip() in ["hey", "back", "continue", "previous"]:
             return {
                 "response": f"Welcome back! Your last question was: \"{last_question}\" but you didn't answer this. Please answer this question.",
                 "current_category": category,
                 "is_reminder": True
             }
 
+        # Calculate depth score before saving
+        from app.services.depth_scorer import depth_scorer
+        depth_data = depth_scorer.calculate_depth_score(text)
+        
         await memory_service.add_memory(
             user_id=user_id,
             session_id=session_id,
@@ -195,10 +201,25 @@ async def interview(
         # Get updated category after followup (in case it changed)
         updated_category = await memory_service.get_phase(user_id, session_id)
         
+        # Calculate progress towards word target
+        updated_user_data = await memory_service.get_user_memories(user_id, session_id)
+        category_memories = updated_user_data.get(updated_category, [])
+        total_category_words = sum(len(m.get("response", "").split()) for m in category_memories if m.get("response"))
+        core_questions_count = len(QUESTION_BANK.get(updated_category, {}).get("questions", []))
+        target_category_words = core_questions_count * 600
+        
         response_data = {
             "response": followup,
             "current_category": updated_category,
-            "memory_saved": True
+            "memory_saved": True,
+            "depth_score": depth_data["total_score"],
+            "depth_level": depth_data["depth_level"],
+            "word_count": len(text.split()),
+            "category_word_progress": {
+                "current": total_category_words,
+                "target": target_category_words,
+                "percentage": round((total_category_words / target_category_words * 100), 1) if target_category_words > 0 else 0
+            }
         }
         
         return response_data

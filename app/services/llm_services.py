@@ -174,9 +174,11 @@ You never rush - you give space for reflection."""
 
     async def generate_followup(self, user_id: str, session_id: str, user_input: str) -> str:
         """
-        Generate follow-up: Core questions (spine) + Max 2-3 dynamic depth questions.
+        Generate follow-up based on depth score to reach 35,000+ word target.
+        Target: ~600 words per core question (59 questions × 600 = 35,400 words)
         """
-        MAX_FOLLOWUPS_PER_CORE = 2  # Maximum follow-ups per core question
+        TARGET_WORDS_PER_QUESTION = 600  # To reach 35,000+ words total
+        MAX_FOLLOWUPS_PER_CORE = 5  # Increased from 2 to get more depth
         
         current_phase = await memory_service.get_phase(user_id, session_id)
         
@@ -212,45 +214,86 @@ You never rush - you give space for reflection."""
         if current_core_question:
             followup_count = await self._count_followups_for_core_question(category_memories, current_core_question)
         
+        # Calculate total words collected for current core question
+        total_words_for_core = 0
+        if current_core_question:
+            for mem in category_memories:
+                if mem.get("question") == current_core_question or \
+                   (followup_count > 0 and mem.get("response")):
+                    total_words_for_core += len(mem.get("response", "").split())
+        
         # Extract context
         self._extract_context(user_id, session_id, user_input)
         
-        # Decision: Core question OR Dynamic follow-up?
-        needs_depth = await self._needs_depth_exploration(user_input)
+        # Calculate depth score for current response
+        from app.services.depth_scorer import depth_scorer
+        depth_data = depth_scorer.calculate_depth_score(user_input)
+        depth_score = depth_data["total_score"]
+        
+        # Decision logic based on depth score and word count
         is_core_question = last_question in core_questions if last_question else False
         just_answered_core = is_core_question and last_response
         
+        # Determine if we need more follow-ups
+        needs_more_followups = (
+            total_words_for_core < TARGET_WORDS_PER_QUESTION and 
+            followup_count < MAX_FOLLOWUPS_PER_CORE and
+            (depth_score < 60 or total_words_for_core < 300)
+        )
+        
         # Debug logging
         print(f"DEBUG: current_core_question={current_core_question}")
-        print(f"DEBUG: followup_count={followup_count}")
-        print(f"DEBUG: needs_depth={needs_depth}")
+        print(f"DEBUG: followup_count={followup_count}/{MAX_FOLLOWUPS_PER_CORE}")
+        print(f"DEBUG: depth_score={depth_score}")
+        print(f"DEBUG: total_words_for_core={total_words_for_core}/{TARGET_WORDS_PER_QUESTION}")
+        print(f"DEBUG: needs_more_followups={needs_more_followups}")
         print(f"DEBUG: answered_core_questions={len(answered_core_questions)}/{len(core_questions)}")
         
         # Check if we should generate follow-up or move to next core
-        if just_answered_core and needs_depth and followup_count < MAX_FOLLOWUPS_PER_CORE:
+        if just_answered_core and needs_more_followups:
             # Generate dynamic follow-up to deepen current core question
             print(f"DEBUG: Generating follow-up {followup_count + 1}/{MAX_FOLLOWUPS_PER_CORE}")
+            print(f"DEBUG: Target remaining words: {TARGET_WORDS_PER_QUESTION - total_words_for_core}")
+            
+            # Determine follow-up focus based on depth score
+            if depth_score < 30:
+                focus_area = "basic details - WHO, WHAT, WHERE, WHEN"
+            elif depth_score < 50:
+                focus_area = "sensory details - sights, sounds, smells, textures"
+            elif depth_score < 70:
+                focus_area = "emotional depth - feelings, reactions, significance"
+            else:
+                focus_area = "deeper reflection - meaning, impact, connections"
+            
             prompt = f"""
-You are a warm British interviewer helping capture life stories.
+You are a warm British interviewer helping capture a complete life story.
+
+GOAL: We're aiming for approximately 600 words per core question to create a rich, detailed life story of 35,000+ words.
 
 Core question asked: "{last_question}"
-User's response: "{user_input}"
+User's response so far: "{user_input}"
+Current word count for this question: {total_words_for_core} / {TARGET_WORDS_PER_QUESTION} words
+Depth score: {depth_score}/100 ({depth_data['depth_level']})
+Follow-up number: {followup_count + 1} of {MAX_FOLLOWUPS_PER_CORE}
 
-Your task: Generate ONE dynamic follow-up question to explore this memory deeper.
+Current focus area: {focus_area}
 
-Focus on:
-- Sensory details (What did it look/sound/smell/feel like?)
-- Emotional resonance (How did that make you feel?)
-- Specific moments (Can you picture a particular moment?)
-- People involved (Who was there? What do you remember about them?)
-- Temporal anchoring (When was this? What time of year?)
+Your task: Generate ONE follow-up question to help reach our word target while enriching the story.
+
+Follow-up strategy based on depth score:
+- Low depth (0-30): Ask for basic facts - "Who was with you? Where exactly was this? When did this happen?"
+- Medium depth (30-50): Ask for sensory details - "What did you see/hear/smell? Can you describe the atmosphere?"
+- Good depth (50-70): Ask for emotions - "How did that make you feel? What was going through your mind?"
+- High depth (70+): Ask for reflection - "Looking back, what did that moment mean to you? How did it shape you?"
 
 Examples:
-- "That sounds special - can you picture the room now? What did it look like?"
-- "You mentioned your friend Charlie - what stands out most about him?"
-- "How did that moment make you feel?"
+- "Can you tell me more about who was there with you?"
+- "What do you remember about how it looked - the colors, the light, the setting?"
+- "What sounds or smells come back to you when you think of that moment?"
+- "How did you feel in that moment? What emotions do you remember?"
+- "Looking back now, what made that experience so significant?"
 
-Generate ONE warm, specific follow-up question that encourages sensory and emotional detail.
+Generate ONE warm, specific follow-up question:
 """
         else:
             # Move to next core question or check phase completion

@@ -70,6 +70,11 @@ class MongoMemoryService:
         contributors = contributors or []
 
         snippet = self._generate_snippet(response)
+        
+        # Calculate depth score
+        from app.services.depth_scorer import depth_scorer
+        depth_data = depth_scorer.calculate_depth_score(response) if response else None
+        
         entry = {
             "_id": str(uuid.uuid4()),
             "user_id": user_id,
@@ -78,6 +83,9 @@ class MongoMemoryService:
             "question": question,
             "response": response,
             "snippet": snippet,
+            "depth_score": depth_data["total_score"] if depth_data else 0,
+            "depth_level": depth_data["depth_level"] if depth_data else "Minimal",
+            "depth_breakdown": depth_data["breakdown"] if depth_data else None,
             "photos": photos,
             "photo_caption": photo_caption,
             "audio_clips": audio_clips,
