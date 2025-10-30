@@ -4,18 +4,20 @@ from openai import AsyncOpenAI
 from app.core.config import settings
 import base64
 import logging
-import cloudinary
-import cloudinary.uploader
+import boto3
+from botocore.exceptions import ClientError
 import os
+import uuid
 
 client = AsyncOpenAI(api_key=settings.openai_api_key)
 logger = logging.getLogger(__name__)
 
-# Configure Cloudinary
-cloudinary.config(
-    cloud_name=settings.cloudinary_cloud_name,
-    api_key=settings.cloudinary_api_key,
-    api_secret=settings.cloudinary_api_secret
+# Configure AWS S3
+s3_client = boto3.client(
+    's3',
+    aws_access_key_id=settings.aws_access_key_id,
+    aws_secret_access_key=settings.aws_secret_access_key,
+    region_name=settings.aws_region
 )
 
 
@@ -24,20 +26,30 @@ class PhotoService:
     Service to analyze uploaded photos and generate follow-up questions for storytelling.
     """
 
-    def upload_to_cloudinary(self, file_path: str, user_id: str) -> str:
+    def upload_to_s3(self, file_path: str, user_id: str) -> str:
         """
-        Upload image to Cloudinary and return public URL.
+        Upload image to AWS S3 and return public URL.
         """
         try:
-            result = cloudinary.uploader.upload(
+            # Generate unique filename
+            file_extension = os.path.splitext(file_path)[1]
+            s3_key = f"tom_storytelling/{user_id}/{uuid.uuid4()}{file_extension}"
+            
+            # Upload to S3 (without ACL - using bucket policy for public access)
+            s3_client.upload_file(
                 file_path,
-                folder=f"tom_storytelling/{user_id}",
-                resource_type="image"
+                settings.s3_bucket_name,
+                s3_key,
+                ExtraArgs={'ContentType': 'image/jpeg'}
             )
-            logger.info(f"Successfully uploaded to Cloudinary: {result['secure_url']}")
-            return result["secure_url"]
-        except Exception as e:
-            logger.exception(f"Failed to upload to Cloudinary: {str(e)}")
+            
+            # Generate public URL
+            s3_url = f"https://{settings.s3_bucket_name}.s3.{settings.aws_region}.amazonaws.com/{s3_key}"
+            logger.info(f"Successfully uploaded to S3: {s3_url}")
+            return s3_url
+            
+        except ClientError as e:
+            logger.exception(f"Failed to upload to S3: {str(e)}")
             return file_path  # Fallback to local path
 
     async def analyze_image(self, user_id: str, file_path: str) -> str:

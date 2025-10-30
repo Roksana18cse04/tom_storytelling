@@ -32,31 +32,31 @@ async def get_progress(user_id: str, session_id: str):
     }
 
 
-@router.get("/related/{user_id}/{session_id}/{memory_id}")
-async def get_related_memories(user_id: str, session_id: str, memory_id: str):
-    """
-    Find memories related to a specific memory based on common keywords.
-    """
-    related = []  # TODO: Implement in MongoDB service
-    return {
-        "user_id": user_id,
-        "session_id": session_id,
-        "memory_id": memory_id,
-        "related_memories": related
-    }
+# @router.get("/related/{user_id}/{session_id}/{memory_id}")
+# async def get_related_memories(user_id: str, session_id: str, memory_id: str):
+#     """
+#     Find memories related to a specific memory based on common keywords.
+#     """
+#     related = []  # TODO: Implement in MongoDB service
+#     return {
+#         "user_id": user_id,
+#         "session_id": session_id,
+#         "memory_id": memory_id,
+#         "related_memories": related
+#     }
 
 
-@router.get("/threads/{user_id}/{session_id}")
-async def get_story_threads(user_id: str, session_id: str):
-    """
-    Detect recurring themes, people, or places across different life stages.
-    """
-    threads = []  # TODO: Implement in MongoDB service
-    return {
-        "user_id": user_id,
-        "session_id": session_id,
-        "story_threads": threads
-    }
+# @router.get("/threads/{user_id}/{session_id}")
+# async def get_story_threads(user_id: str, session_id: str):
+#     """
+#     Detect recurring themes, people, or places across different life stages.
+#     """
+#     threads = []  # TODO: Implement in MongoDB service
+#     return {
+#         "user_id": user_id,
+#         "session_id": session_id,
+#         "story_threads": threads
+#     }
 
 
 
@@ -86,7 +86,24 @@ async def get_session_memory(user_id: str, session_id: str):
     if not session_data:
         raise HTTPException(status_code=404, detail=f"No memories found for session '{session_id}'")
 
-    return {"user_id": user_id, "session_id": session_id, "categories": session_data}
+    # Find last unanswered question
+    last_question = None
+    all_memories = []
+    for category, memories in session_data.items():
+        all_memories.extend(memories)
+    
+    # Iterate from end to find last unanswered
+    for mem in reversed(all_memories):
+        if mem.get('question') and not mem.get('response', '').strip():
+            last_question = mem['question']
+            break
+
+    return {
+        "user_id": user_id,
+        "session_id": session_id,
+        "categories": session_data,
+        "last_question": last_question
+    }
 
 
 @router.get("/{user_id}/{session_id}/{category}")

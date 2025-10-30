@@ -42,8 +42,8 @@ async def photo_question(
         with open(temp_file_path, "wb") as f:
             shutil.copyfileobj(image.file, f)
 
-        # Upload to Cloudinary and get URL
-        cloudinary_url = photo_service.upload_to_cloudinary(temp_file_path, user_id)
+        # Upload to S3 and get URL
+        s3_url = photo_service.upload_to_s3(temp_file_path, user_id)
         
         # Analyze photo using LLM to get a storytelling question
         question = await photo_service.analyze_image(user_id, temp_file_path)
@@ -66,15 +66,15 @@ async def photo_question(
             category=category,
             question=question,
             response="",
-            photos=[cloudinary_url]
+            photos=[s3_url]
         )
 
         return {
             "user_id": user_id,
             "session_id": session_id,
-            "memory_id": memory_id,  # ← Return this!
+            "memory_id": memory_id,
             "question": question,
-            "image_path": cloudinary_url
+            "image_path": s3_url
         }
 
     except Exception as e:

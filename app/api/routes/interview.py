@@ -68,17 +68,23 @@ async def interview(
         
         text_lower = text.lower().strip()
         
-        # Check if user is EXPLICITLY requesting phase change
-        explicit_phase_keywords = ["let's explore {phase_map} memory", "let's discuss {phase_map} memory","switch to {phase_map}","want to shear {phase_map} memory"]
-
-        is_explicit_phase_request = any(keyword in text_lower for keyword in explicit_phase_keywords)
+        # Check if user is EXPLICITLY requesting phase change with clear intent
+        # Must have both: intent phrase + phase keyword + "memory" word
+        explicit_intent_phrases = [
+            "want to share", "want to shear", "want to explore",
+            "let's explore", "let's talk about",
+            "i'd like to share", "move to"
+        ]
         
-        # Only detect phase change if it's an explicit request
+        has_explicit_intent = any(phrase in text_lower for phrase in explicit_intent_phrases)
+        has_memory_keyword = "memory" in text_lower or "memories" in text_lower
+        
+        # Detect which phase user wants (only if explicit intent)
         detected_phase = None
-        if is_explicit_phase_request:
-            for key, phase in phase_map.items():
-                if key in text_lower:
-                    detected_phase = phase
+        if has_explicit_intent and has_memory_keyword:
+            for phase_name, keywords in phase_map.items():
+                if any(kw in text_lower for kw in keywords):
+                    detected_phase = phase_name
                     break
         
         if detected_phase and detected_phase != category:
@@ -127,6 +133,54 @@ async def interview(
                 "current_category": category,
                 "is_reminder": True
             }
+
+        # Check if user wants to skip the question
+        skip_keywords = ["","null"]
+        if text_lower in skip_keywords or text.strip() == "":
+            # User wants to skip - get next question without saving response
+            core_questions = QUESTION_BANK.get(category, {}).get("questions", [])
+            answered_questions = [m.get("question") for m in user_data.get(category, []) if m.get("response", "").strip()]
+            
+            # Find next unanswered question
+            next_question = None
+            for q in core_questions:
+                if q not in answered_questions and q != last_question:
+                    next_question = q
+                    break
+            
+            if next_question:
+                # Save the skipped question with empty response
+                if last_question:
+                    await memory_service.add_memory(
+                        user_id=user_id,
+                        session_id=session_id,
+                        category=category,
+                        question=last_question,
+                        response="[Skipped]"
+                    )
+                
+                # Save next question
+                await memory_service.add_memory(
+                    user_id=user_id,
+                    session_id=session_id,
+                    category=category,
+                    question=next_question,
+                    response=""
+                )
+                
+                return {
+                    "response": f"No problem! Let's move on. {next_question}",
+                    "current_category": category,
+                    "question_skipped": True,
+                    "skipped_question": last_question
+                }
+            else:
+                # No more questions in this phase
+                return {
+                    "response": f"You've covered all the questions in {category.replace('_', ' ')}! Would you like to explore another phase?",
+                    "current_category": category,
+                    "phase_complete": True
+                }
 
         # Calculate depth score before saving
         from app.services.depth_scorer import depth_scorer
