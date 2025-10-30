@@ -34,13 +34,15 @@ class MongoMemoryService:
         text_lower = text.lower()
         
         stage_map = {
-            "childhood": ["child", "kid", "young", "elementary", "primary school", "grew up", "born"],
-            "teenage years": ["teenage", "teen", "high school", "secondary", "adolescent"],
-            "early adulthood": ["university", "college", "first job", "twenties", "young adult", "early adult"],
-            "career work": ["career", "work", "job", "professional", "employed", "business"],
-            "relationships & family": ["married", "wedding", "spouse", "children", "parent", "relationship"],
-            "hobbies & adventures": ["travel", "trip", "journey", "vacation", "adventure", "hobby", "visited"],
-            "later life & reflections": ["later life", "reflection", "retired", "retirement", "grandchildren", "looking back", "legacy", "advice"]
+            "childhood": ["childhood", "child", "kid", "young", "elementary", "primary school", "grew up"],
+            "teenage years": ["teenage", "teen", "adolescent", "high school", "secondary school", "teenager"],
+            "early adulthood": ["early adult", "young adult", "university", "college", "first job", "twenties"],
+            "career work": ["career", "work", "job", "professional", "office", "business", "employed"],
+            "relationships & family": ["married", "wedding", "spouse", "partner", "children", "parent", "family life"],
+            "hobbies & adventures": ["travel", "hobby", "adventure", "trip", "vacation", "journey", "visited", "tour"],
+            "home & community": ["moved", "neighborhood", "community", "hometown", "lived in"],
+            "challenges & growth": ["difficult", "struggle", "overcome", "challenge", "hardship"],
+            "later life & reflections": ["retired", "retirement", "grandchildren", "looking back", "reflection"]
         }
         
         for phase, keywords in stage_map.items():
@@ -127,15 +129,29 @@ class MongoMemoryService:
         await memories_collection.delete_many({"user_id": user_id, "session_id": session_id})
         await user_phases_collection.delete_one({"user_id": user_id, "session_id": session_id})
 
-    async def get_formatted_history(self, user_id: str, session_id: str) -> str:
+    async def get_formatted_history(self, user_id: str, session_id: str) -> dict:
         session_data = await self.get_user_memories(user_id, session_id)
         formatted_lines = []
+        last_question = None
+        all_memories = []
+        
         for category, memories in session_data.items():
             formatted_lines.append(f"--- {category.upper()} ---")
             for mem in memories:
                 formatted_lines.append(f"Q: {mem['question']}")
                 formatted_lines.append(f"A: {mem['response']}\n")
-        return "\n".join(formatted_lines)
+                all_memories.append(mem)
+        
+        # Find last unanswered question (iterate from end)
+        for mem in reversed(all_memories):
+            if mem.get('question') and not mem.get('response', '').strip():
+                last_question = mem['question']
+                break
+        
+        return {
+            "formatted_history": "\n".join(formatted_lines),
+            "last_question": last_question
+        }
 
     # ─── Progress Tracking ────────────────────────
     async def get_progress(self, user_id: str, session_id: str) -> Dict[str, float]:

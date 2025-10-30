@@ -1,11 +1,20 @@
 #app/main.py
 
 from fastapi import FastAPI 
+from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import interview, history, memory_map, story, photo_story, depth_stats
 import os
 
 
 app= FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:5175"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 import psutil

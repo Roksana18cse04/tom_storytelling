@@ -42,7 +42,9 @@ async def interview(
                                 "4. Career & work life\n"
                                 "5. Relationships & family\n"
                                 "6. Hobbies & adventures (travel, interests)\n"
-                                "7. Later life & reflections\n\n"
+                                "7. Home & Community\n"
+                                "8. Challanges & Growth\n"
+                                "9. Later life & reflections\n\n"
                                 "You can simply tell me the number or name of the phase.",
                     "awaiting_phase_selection": True,
                     "current_category": None

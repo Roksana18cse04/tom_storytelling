@@ -10,10 +10,15 @@ async def get_user_sessions(user_id: str):
 
 @router.get("/{user_id}")
 async def get_formatted_history(user_id: str, session_id: str = Query(...)):
-    formatted = await memory_service.get_formatted_history(user_id, session_id)
-    if not formatted:
+    result = await memory_service.get_formatted_history(user_id, session_id)
+    if not result or not result.get("formatted_history"):
         raise HTTPException(status_code=404, detail="No history found.")
-    return {"user_id": user_id, "session_id": session_id, "formatted_history": formatted}
+    return {
+        "user_id": user_id,
+        "session_id": session_id,
+        "formatted_history": result["formatted_history"],
+        "last_question": result.get("last_question")
+    }
 
 @router.delete("/{user_id}")
 async def clear_session(user_id: str, session_id: str = Query(...)):

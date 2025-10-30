@@ -140,6 +140,27 @@ async def photo_answer(
                 "snippet": memory_service._generate_snippet(updated_response)
             }}
         )
+
+        user_data = await memory_service.get_user_memories(user_id, session_id)
+
+        # Check for unanswered question
+        last_question = None
+        has_unanswered = False
+        if category in user_data and user_data[category]:
+            for mem in reversed(user_data[category]):
+                if mem["question"] and not mem["response"]:
+                    last_question = mem["question"]
+                    has_unanswered = True
+                    user_data[category].remove(mem)
+                    break
+        
+        # If returning user with unanswered question, remind them
+        if has_unanswered and text.lower().strip() in ["back", "continue", "previous"]:
+            return {
+                "last message": f"Welcome back! Your last question was: \"{last_question}\" but you didn't answer this. Please answer this question.",
+                "current_category": category,
+                "is_reminder": True
+            }
         
         # Count follow-ups
         conversation_history = []
