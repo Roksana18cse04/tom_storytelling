@@ -78,7 +78,6 @@ class MongoMemoryService:
         depth_data = depth_scorer.calculate_depth_score(response) if response else None
         
         entry = {
-            "_id": str(uuid.uuid4()),
             "user_id": user_id,
             "session_id": session_id,
             "category": category,
@@ -95,8 +94,8 @@ class MongoMemoryService:
             "timestamp": datetime.datetime.now().isoformat()
         }
 
-        await memories_collection.insert_one(entry)
-        return entry["_id"]
+        result = await memories_collection.insert_one(entry)
+        return str(result.inserted_id)
 
     async def get_user_sessions(self, user_id: str):
         """Return all session IDs for a user."""

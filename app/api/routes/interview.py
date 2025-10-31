@@ -27,46 +27,24 @@ async def interview(
         if not text:
             raise HTTPException(status_code=400, detail="Either text or audio must be provided.")
 
-        # Get or detect initial phase
+        # Get current phase
         category = await memory_service.get_phase(user_id, session_id)
-        if category is None:
-            # First interaction - detect phase from user input
-            category = memory_service.detect_initial_phase(text)
-            if category == "ASK_USER":
-                # Ask user to choose their preferred phase
-                return {
-                    "response": "That sounds wonderful! Which part of your life would you like to share about?\n\n"
-                                "1. Childhood (early years, family, school)\n"
-                                "2. Teenage years (high school, friendships)\n"
-                                "3. Early adulthood (university, first jobs)\n"
-                                "4. Career & work life\n"
-                                "5. Relationships & family\n"
-                                "6. Hobbies & adventures (travel, interests)\n"
-                                "7. Home & Community\n"
-                                "8. Challanges & Growth\n"
-                                "9. Later life & reflections\n\n"
-                                "You can simply tell me the number or name of the phase.",
-                    "awaiting_phase_selection": True,
-                    "current_category": None
-                }
-            await memory_service.set_phase(user_id, session_id, category)
-        
         user_data = await memory_service.get_user_memories(user_id, session_id)
+        
+        text_lower = text.lower().strip()
         
         # Handle phase selection from user
         phase_map = {
             "childhood": ["childhood", "child", "kid", "young", "elementary", "primary school", "grew up"],
-            "teenage years": ["teenage", "teen", "adolescent", "high school", "secondary school", "teenager"],
-            "early adulthood": ["early adult", "young adult", "university", "college", "first job", "twenties"],
-            "career work": ["career", "work", "job", "professional", "office", "business", "employed"],
-            "relationships & family": ["married", "wedding", "spouse", "partner", "children", "parent", "family life"],
-            "hobbies & adventures": ["travel", "hobby", "adventure", "trip", "vacation", "journey", "visited", "tour"],
-            "home & community": ["moved", "neighborhood", "community", "hometown", "lived in"],
-            "challenges & growth": ["difficult", "struggle", "overcome", "challenge", "hardship"],
-            "later life & reflections": ["retired", "retirement", "grandchildren", "looking back", "reflection"]
+            "teenage years": ["teenage", "teen", "adolescent", "high school", "secondary school", "teenager", "teenage years"],
+            "early adulthood": ["early adult", "young adult", "university", "college", "first job", "twenties", "early adulthood"],
+            "career work": ["career", "work", "job", "professional", "office", "business", "employed","career work"],
+            "relationships & family": ["relationship", "relationships", "married", "wedding", "spouse", "partner", "children", "parent", "family life", "family","relationships family","relationships & family"],
+            "hobbies & adventures": ["hobby", "hobbies", "adventure", "adventures", "travel", "trip", "vacation", "journey", "visited", "tour","hobbies adventures","hobbies & adventures"],
+            "home & community": ["home", "community", "moved", "neighborhood", "hometown", "lived in","home & community","home community"],
+            "challenges & growth": ["challenge", "challenges", "growth", "difficult", "struggle", "overcome", "hardship","challenges growth","challenges & growth"],
+            "later life & reflections": ["later life", "reflection", "reflections", "retired", "retirement", "grandchildren", "looking back","later life reflections","later life & reflections"]
         }
-        
-        text_lower = text.lower().strip()
         
         # Check if user is EXPLICITLY requesting phase change with clear intent
         # Must have both: intent phrase + phase keyword + "memory" word
@@ -77,7 +55,7 @@ async def interview(
         ]
         
         has_explicit_intent = any(phrase in text_lower for phrase in explicit_intent_phrases)
-        has_memory_keyword = "memory" in text_lower or "memories" in text_lower
+        has_memory_keyword = any(word in text_lower for word in ["memory", "memories", "story", "stories", "experience", "experiences"])
         
         # Detect which phase user wants (only if explicit intent)
         detected_phase = None
@@ -87,7 +65,8 @@ async def interview(
                     detected_phase = phase_name
                     break
         
-        if detected_phase and detected_phase != category:
+        # If phase detected and either no current category OR different category
+        if detected_phase and (category is None or detected_phase != category):
             # User explicitly wants to switch phase
             category = detected_phase
             await memory_service.set_phase(user_id, session_id, category)
@@ -114,6 +93,27 @@ async def interview(
                     "current_category": category,
                     "phase_selected": True
                 }
+        
+        # If no phase detected and category is None, use detect_initial_phase
+        if category is None and detected_phase is None:
+            category = memory_service.detect_initial_phase(text)
+            if category == "ASK_USER":
+                return {
+                    "response": "That sounds wonderful! Which part of your life would you like to share about?\n\n"
+                                "1. Childhood (early years, family, school)\n"
+                                "2. Teenage years (high school, friendships)\n"
+                                "3. Early adulthood (university, first jobs)\n"
+                                "4. Career & work life\n"
+                                "5. Relationships & family\n"
+                                "6. Hobbies & adventures (travel, interests)\n"
+                                "7. Home & Community\n"
+                                "8. Challanges & Growth\n"
+                                "9. Later life & reflections\n\n"
+                                "You can simply tell me the number or name of the phase.",
+                    "awaiting_phase_selection": True,
+                    "current_category": None
+                }
+            await memory_service.set_phase(user_id, session_id, category)
         
         # Check for unanswered question
         last_question = None
@@ -245,7 +245,11 @@ async def interview(
                     "all_phases_complete": True
                 }
         
-        # Save the AI's question to memory (so next time we know what was asked)
+        # Check if followup is a core question and add transition for display
+        core_questions = QUESTION_BANK.get(category, {}).get("questions", [])
+        is_core_question = followup in core_questions
+        
+        # Save the AI's question to memory (clean core question without transition)
         await memory_service.add_memory(
             user_id=user_id,
             session_id=session_id,
@@ -253,6 +257,11 @@ async def interview(
             question=followup,
             response=""
         )
+        
+        # Add transition for display if it's a core question
+        display_question = followup
+        if is_core_question:
+            display_question = f"Lovely. {followup}"
         
         # Get updated category after followup (in case it changed)
         updated_category = await memory_service.get_phase(user_id, session_id)
@@ -265,7 +274,7 @@ async def interview(
         target_category_words = core_questions_count * 600
         
         response_data = {
-            "response": followup,
+            "response": display_question,
             "current_category": updated_category,
             "memory_saved": True,
             "depth_score": depth_data["total_score"],

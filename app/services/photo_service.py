@@ -21,6 +21,22 @@ s3_client = boto3.client(
 )
 
 
+def get_presigned_url(bucket_name: str, key: str, expiry: int = 3600):
+    """
+    Generate a presigned URL for S3 object (valid for 1 hour)
+    """
+    try:
+        url = s3_client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": bucket_name, "Key": key},
+            ExpiresIn=expiry
+        )
+        return url
+    except Exception as e:
+        logger.error(f"Failed to generate presigned URL: {e}")
+        return None
+
+
 class PhotoService:
     """
     Service to analyze uploaded photos and generate follow-up questions for storytelling.
@@ -31,20 +47,40 @@ class PhotoService:
         Upload image to AWS S3 and return public URL.
         """
         try:
-            # Generate unique filename
-            file_extension = os.path.splitext(file_path)[1]
+            logger.info(f"Original file_path: {file_path}")
+            # Extract extension properly - remove all trailing dots
+            base_name = os.path.basename(file_path)
+            # Split and get last part, remove all dots
+            if '.' in base_name:
+                ext_part = base_name.split('.')[-1].rstrip('.')
+                file_extension = f".{ext_part}" if ext_part else ".jpg"
+            else:
+                file_extension = ".jpg"
+            logger.info(f"Extracted extension: {file_extension}")
             s3_key = f"tom_storytelling/{user_id}/{uuid.uuid4()}{file_extension}"
+            logger.info(f"Generated s3_key: {s3_key}")
+            
+            # Determine content type
+            content_type_map = {
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
+                '.png': 'image/png',
+                '.webp': 'image/webp',
+                '.gif': 'image/gif'
+            }
+            content_type = content_type_map.get(file_extension.lower(), 'image/jpeg')
             
             # Upload to S3 (without ACL - using bucket policy for public access)
             s3_client.upload_file(
                 file_path,
                 settings.s3_bucket_name,
                 s3_key,
-                ExtraArgs={'ContentType': 'image/jpeg'}
+                ExtraArgs={'ContentType': content_type}
             )
             
-            # Generate public URL
+            # Generate public URL and remove any trailing dots
             s3_url = f"https://{settings.s3_bucket_name}.s3.{settings.aws_region}.amazonaws.com/{s3_key}"
+            s3_url = s3_url.rstrip('.')  # Final safeguard
             logger.info(f"Successfully uploaded to S3: {s3_url}")
             return s3_url
             
@@ -110,6 +146,27 @@ Generate ONE comprehensive opening question that asks for WHO, WHAT, WHERE, WHEN
         Follows a systematic approach: Context → Sensory → Emotional → Significance
         """
         try:
+            # Clean image URL - remove trailing dots
+            clean_image_url = image_url.rstrip('.')
+            logger.info(f"Original image_url: {image_url}")
+            logger.info(f"Cleaned image_url: {clean_image_url}")
+            
+            # Generate presigned URL for OpenAI to access
+            bucket_name = settings.s3_bucket_name
+            region = settings.aws_region
+            prefix = f"https://{bucket_name}.s3.{region}.amazonaws.com/"
+            
+            if clean_image_url.startswith(prefix):
+                s3_key = clean_image_url.replace(prefix, "")
+            else:
+                s3_key = clean_image_url  # fallback if already a key
+            
+            presigned_url = get_presigned_url(bucket_name, s3_key)
+            if not presigned_url:
+                raise Exception("Failed to generate presigned URL")
+            
+            logger.info(f"Generated presigned URL for image: {presigned_url}")
+            
             # Build conversation context
             history_text = "\n".join([
                 f"Q: {item['question']}\nA: {item['answer']}"
@@ -205,12 +262,12 @@ Generate ONE warm, specific follow-up question:"""
                             },
                             {
                                 "type": "image_url",
-                                "image_url": {"url": image_url}
+                                "image_url": {"url": presigned_url}
                             }
                         ]
                     }
                 ],
-                temperature=0.7,
+                temperature=0.7
             )
 
             followup = response.choices[0].message.content.strip()

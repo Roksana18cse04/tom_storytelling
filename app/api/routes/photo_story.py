@@ -10,6 +10,7 @@ from app.services.memory_services_mongodb import mongo_memory_service as memory_
 from typing import Optional
 import logging
 from fastapi import UploadFile
+from bson import ObjectId
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,9 @@ async def photo_question(
             session_id = str(uuid.uuid4())
 
         # Save the uploaded image temporarily
-        filename = f"{uuid.uuid4()}_{image.filename}"
+        # Clean filename to remove extra dots
+        clean_filename = image.filename.rstrip('.')
+        filename = f"{uuid.uuid4()}_{clean_filename}"
         temp_file_path = os.path.join(IMAGE_DIR, filename)
         with open(temp_file_path, "wb") as f:
             shutil.copyfileobj(image.file, f)
@@ -90,7 +93,7 @@ async def photo_answer(
     audio: Optional[UploadFile] = File(None)
 ):
     """
-    User answers the photo question. AI may generate follow-up questions (max 2).
+    User answers the photo question. AI may generate follow-up questions (max 4).
     """
     MAX_PHOTO_FOLLOWUPS = 4  # Structured follow-ups: Who/What → When/Where → Sensory → Emotional/Significance
     
@@ -107,11 +110,17 @@ async def photo_answer(
         # Get the memory with the photo
         session_data = await memory_service.get_user_memories(user_id, session_id)
         
+        # Convert memory_id to ObjectId
+        try:
+            obj_id = ObjectId(memory_id)
+        except:
+            raise HTTPException(status_code=400, detail="Invalid memory_id format")
+        
         target_memory = None
         old_category = None
         for category, memories in session_data.items():
             for mem in memories:
-                if mem["_id"] == memory_id:
+                if mem["_id"] == obj_id:
                     target_memory = mem
                     old_category = category
                     break
@@ -122,6 +131,8 @@ async def photo_answer(
             raise HTTPException(status_code=404, detail="Photo memory not found")
         
         photo_url = target_memory.get("photos", [None])[0]
+        if photo_url:
+            photo_url = photo_url.rstrip('.')  # Clean trailing dots from URL
         
         # Update memory with answer
         from app.core.database import memories_collection
@@ -134,7 +145,7 @@ async def photo_answer(
             updated_response = answer
         
         await memories_collection.update_one(
-            {"_id": memory_id},
+            {"_id": obj_id},
             {"$set": {
                 "response": updated_response,
                 "snippet": memory_service._generate_snippet(updated_response)
@@ -183,7 +194,7 @@ async def photo_answer(
                     detected_category = old_category
                 
                 await memories_collection.update_one(
-                    {"_id": memory_id},
+                    {"_id": obj_id},
                     {"$set": {
                         "question": followup,
                         "category": detected_category
@@ -208,7 +219,7 @@ async def photo_answer(
         caption = await photo_service.generate_caption(updated_response, photo_url)
         
         await memories_collection.update_one(
-            {"_id": memory_id},
+            {"_id": obj_id},
             {"$set": {
                 "photo_caption": caption,
                 "category": detected_category

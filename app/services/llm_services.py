@@ -81,7 +81,7 @@ client = AsyncOpenAI(api_key=settings.openai_api_key)
 
 class LLMService:
     def __init__(self):
-        self.model = "gpt-4o-mini"
+        self.model = "gpt-4o"  # Upgraded for better reasoning
         self.context_cache = {}  # Store user context (names, ages, interests)
 
     def _is_vague_response(self, text: str) -> bool:
@@ -172,13 +172,76 @@ You never rush - you give space for reflection."""
         
         return count
 
+    async def _check_story_completeness(self, conversation_history: list, user_input: str, current_question: str) -> dict:
+        """
+        Use GPT-4o to intelligently check if memory is complete.
+        Returns: {"is_complete": bool, "missing": list, "suggestion": str, "is_relevant": bool}
+        """
+        history_text = "\n".join([
+            f"Q: {item['question']}\nA: {item.get('response', '')}" 
+            for item in conversation_history[-5:]  # Last 5 exchanges
+        ])
+        
+        prompt = f"""
+Analyze this memory conversation and determine if the story feels complete.
+
+Current question: "{current_question}"
+Conversation:
+{history_text}
+
+Latest response: "{user_input}"
+
+First, check if the latest response is RELEVANT to the current question:
+- If user talks about something completely different (e.g., asked about toy but talks about birth), mark as irrelevant
+
+Then check for:
+1. Has EMOTION been shared? (feelings, reactions)
+2. Has REFLECTION been shared? (meaning, significance)
+3. Does the story have a clear ARC? (beginning → middle → end)
+4. Are key details present? (who, what, where, when, why, how)
+
+IMPORTANT for suggestion field:
+- If incomplete, generate a NEW follow-up question that builds on their answer
+- DO NOT repeat the current question: "{current_question}"
+- Ask about specific details they mentioned (e.g., "You mentioned the neighborhood was close-knit—what was that like?")
+- Focus on missing elements (emotion, reflection, sensory details, etc.)
+
+Respond in JSON format:
+{{
+  "is_relevant": true/false,
+  "is_complete": true/false,
+  "has_emotion": true/false,
+  "has_reflection": true/false,
+  "has_story_arc": true/false,
+  "missing_elements": ["list of missing elements"],
+  "suggestion": "one NEW follow-up question based on their answer (NOT the core question), or gentle redirect if irrelevant, or empty string if complete"
+}}
+"""
+        
+        response = await client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": "You are an expert story analyst. Respond only with valid JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3,
+            response_format={"type": "json_object"}
+        )
+        
+        import json
+        try:
+            return json.loads(response.choices[0].message.content)
+        except:
+            return {"is_complete": False, "suggestion": "Can you tell me more about that?"}
+
     async def generate_followup(self, user_id: str, session_id: str, user_input: str) -> str:
         """
-        Generate follow-up based on depth score to reach 35,000+ word target.
+        Intelligent follow-up generation using GPT-4o.
+        Pattern: Core Question → Follow-ups → Completion Check → Next Question
         Target: ~600 words per core question (59 questions × 600 = 35,400 words)
         """
-        TARGET_WORDS_PER_QUESTION = 600  # To reach 35,000+ words total
-        MAX_FOLLOWUPS_PER_CORE = 5  # Increased from 2 to get more depth
+        TARGET_WORDS_PER_QUESTION = 600
+        MAX_FOLLOWUPS_PER_CORE = 10  # Dynamic - stops when story is complete
         
         current_phase = await memory_service.get_phase(user_id, session_id)
         
@@ -230,82 +293,256 @@ You never rush - you give space for reflection."""
         depth_data = depth_scorer.calculate_depth_score(user_input)
         depth_score = depth_data["total_score"]
         
-        # Decision logic based on depth score and word count
-        is_core_question = last_question in core_questions if last_question else False
-        just_answered_core = is_core_question and last_response
+        # Build conversation history for completion check
+        conversation_history = []
+        all_asked_questions = set()  # Track ALL questions asked (core + follow-ups)
+        if current_core_question:
+            for mem in category_memories:
+                q = mem.get("question")
+                if q:
+                    all_asked_questions.add(q.lower().strip())
+                if mem.get("question") == current_core_question or \
+                   (mem.get("question") and mem.get("response")):
+                    conversation_history.append({
+                        "question": mem.get("question"),
+                        "response": mem.get("response", "")
+                    })
+        
+        # Check story completeness using GPT-4o
+        completeness = await self._check_story_completeness(conversation_history, user_input, last_question or "")
+        
+        # Check if we're currently exploring a core question (not if last question was core)
+        is_exploring_core = current_core_question is not None
+        just_gave_response = user_input and len(user_input.strip()) > 0
+        
+        # Check if response is relevant to current question
+        is_relevant = completeness.get("is_relevant", True)
+        
+        # If irrelevant, gently redirect to current question
+        if not is_relevant and last_question:
+            print(f"DEBUG: User gave irrelevant answer, redirecting to: {last_question}")
+            redirect_prompt = f"""
+The user was asked: "{last_question}"
+But they answered with: "{user_input}"
+
+Generate a warm, gentle redirect that:
+1. Acknowledges what they shared ("That's interesting about...")
+2. Gently brings them back to the original question
+3. Uses British phrasing
+
+Example: "That's lovely to hear about your birth in Dhaka. But I'm curious—could we go back to the toy or game you mentioned? What did it look like, and where did you play with it?"
+
+Generate ONE gentle redirect:
+"""
+            
+            response = await client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": self._get_british_system_prompt()},
+                    {"role": "user", "content": redirect_prompt}
+                ],
+                temperature=0.7
+            )
+            
+            redirect = response.choices[0].message.content.strip()
+            await memory_service.add_message(user_id, session_id, "Assistant", redirect)
+            return redirect
+        
+        # Check if last question was a confirmation question
+        is_confirmation_question = last_question and "anything more" in last_question.lower() and "move on" in last_question.lower()
+        
+        # If user answered confirmation question, detect their intent
+        if is_confirmation_question:
+            user_input_lower = user_input.lower().strip()
+            word_count = len(user_input.split())
+            
+            # Check if user wants to move on (short responses with move-on keywords)
+            user_wants_to_move_on = (
+                any(word in user_input_lower for word in ["no", "move", "next", "skip"]) and
+                word_count <= 10
+            )
+            
+            # Check if user is sharing actual content (longer response)
+            user_sharing_content = word_count > 10 or ("yes" in user_input_lower and word_count > 3)
+            
+            if user_wants_to_move_on:
+                print("DEBUG: User wants to move on, going to next core question")
+                if unanswered_core:
+                    next_core = unanswered_core[0]
+                    print(f"DEBUG: Next core question: {next_core}")
+                    return next_core
+                else:
+                    print("DEBUG: Phase complete")
+                    return "PHASE_COMPLETE"
+            elif user_sharing_content:
+                print(f"DEBUG: User sharing more content ({word_count} words), treating as normal response")
+                pass
+            else:
+                print("DEBUG: User wants to continue but no content yet, generating follow-up")
+                pass
+        
+        # Check if user just answered a core question (not a follow-up)
+        last_question_was_core = last_question in core_questions if last_question else False
         
         # Determine if we need more follow-ups
         needs_more_followups = (
-            total_words_for_core < TARGET_WORDS_PER_QUESTION and 
+            not completeness.get("is_complete", False) and
             followup_count < MAX_FOLLOWUPS_PER_CORE and
-            (depth_score < 60 or total_words_for_core < 300)
+            (total_words_for_core < TARGET_WORDS_PER_QUESTION or depth_score < 60)
         )
         
         # Debug logging
+        print(f"DEBUG: last_question={last_question}")
+        print(f"DEBUG: last_question_was_core={last_question_was_core}")
         print(f"DEBUG: current_core_question={current_core_question}")
         print(f"DEBUG: followup_count={followup_count}/{MAX_FOLLOWUPS_PER_CORE}")
         print(f"DEBUG: depth_score={depth_score}")
         print(f"DEBUG: total_words_for_core={total_words_for_core}/{TARGET_WORDS_PER_QUESTION}")
         print(f"DEBUG: needs_more_followups={needs_more_followups}")
+        print(f"DEBUG: is_exploring_core={is_exploring_core}")
+        print(f"DEBUG: just_gave_response={just_gave_response}")
         print(f"DEBUG: answered_core_questions={len(answered_core_questions)}/{len(core_questions)}")
         
+        # If user just answered a core question, ALWAYS generate at least one follow-up
+        if last_question_was_core and just_gave_response:
+            print(f"DEBUG: User just answered core question, generating first follow-up")
+            needs_more_followups = True  # Force follow-up generation
+        
         # Check if we should generate follow-up or move to next core
-        if just_answered_core and needs_more_followups:
-            # Generate dynamic follow-up to deepen current core question
-            print(f"DEBUG: Generating follow-up {followup_count + 1}/{MAX_FOLLOWUPS_PER_CORE}")
-            print(f"DEBUG: Target remaining words: {TARGET_WORDS_PER_QUESTION - total_words_for_core}")
+        if is_exploring_core and just_gave_response and needs_more_followups:
+            print(f"DEBUG: Generating follow-up {followup_count + 1}")
+            print(f"DEBUG: Completeness check: {completeness}")
             
-            # Determine follow-up focus based on depth score
-            if depth_score < 30:
-                focus_area = "basic details - WHO, WHAT, WHERE, WHEN"
-            elif depth_score < 50:
-                focus_area = "sensory details - sights, sounds, smells, textures"
-            elif depth_score < 70:
+            # ALWAYS generate new follow-up (don't trust GPT-4o suggestion to avoid core question repetition)
+            
+            # Determine follow-up focus
+            missing = completeness.get("missing_elements", [])
+            if "emotion" in str(missing).lower():
                 focus_area = "emotional depth - feelings, reactions, significance"
+            elif "reflection" in str(missing).lower():
+                focus_area = "deeper reflection - meaning, impact, life lessons"
+            elif "story arc" in str(missing).lower():
+                focus_area = "narrative flow - what happened next, how it ended"
+            elif depth_score < 30:
+                focus_area = "basic details - WHO, WHAT, WHERE, WHEN, WHY, HOW"
+            elif depth_score < 50:
+                focus_area = "sensory details - sights, sounds, smells, atmosphere"
             else:
-                focus_area = "deeper reflection - meaning, impact, connections"
+                focus_area = "deeper context - relationships, significance, connections"
+            
+            # Get list of already asked questions to avoid repetition
+            already_asked = "\n".join([f"- {q}" for q in all_asked_questions])
             
             prompt = f"""
-You are a warm British interviewer helping capture a complete life story.
+You are a warm British interviewer capturing a complete life story.
 
-GOAL: We're aiming for approximately 600 words per core question to create a rich, detailed life story of 35,000+ words.
+Pattern: Core Question → Follow-ups → Completion Check → Next Question
 
-Core question asked: "{last_question}"
-User's response so far: "{user_input}"
-Current word count for this question: {total_words_for_core} / {TARGET_WORDS_PER_QUESTION} words
-Depth score: {depth_score}/100 ({depth_data['depth_level']})
-Follow-up number: {followup_count + 1} of {MAX_FOLLOWUPS_PER_CORE}
+CURRENT CORE QUESTION: "{current_core_question}"
+User's latest response: "{user_input}"
 
-Current focus area: {focus_area}
+Progress:
+- Words collected: {total_words_for_core} / {TARGET_WORDS_PER_QUESTION}
+- Depth score: {depth_score}/100 ({depth_data['depth_level']})
+- Follow-up: {followup_count + 1}
+- Story completeness: {completeness.get('is_complete', False)}
+- Missing elements: {', '.join(completeness.get('missing_elements', []))}
 
-Your task: Generate ONE follow-up question to help reach our word target while enriching the story.
+Focus area: {focus_area}
 
-Follow-up strategy based on depth score:
-- Low depth (0-30): Ask for basic facts - "Who was with you? Where exactly was this? When did this happen?"
-- Medium depth (30-50): Ask for sensory details - "What did you see/hear/smell? Can you describe the atmosphere?"
-- Good depth (50-70): Ask for emotions - "How did that make you feel? What was going through your mind?"
-- High depth (70+): Ask for reflection - "Looking back, what did that moment mean to you? How did it shape you?"
+IMPORTANT RULES:
+1. Your follow-up MUST relate ONLY to the current core question above
+2. DO NOT ask about new topics or other core questions
+3. Build on what they just said about THIS specific topic
+4. DO NOT repeat these already asked questions:
+{already_asked}
 
-Examples:
-- "Can you tell me more about who was there with you?"
-- "What do you remember about how it looked - the colors, the light, the setting?"
-- "What sounds or smells come back to you when you think of that moment?"
-- "How did you feel in that moment? What emotions do you remember?"
-- "Looking back now, what made that experience so significant?"
+Generate ONE contextual follow-up question that:
+1. Directly relates to the CURRENT CORE QUESTION: "{current_core_question}"
+2. Builds naturally on their latest response: "{user_input[:100]}..."
+3. Addresses missing elements: {', '.join(completeness.get('missing_elements', ['details']))}
+4. Uses warm, British phrasing
+5. Encourages storytelling (not yes/no questions)
 
-Generate ONE warm, specific follow-up question:
+Examples based on focus (all related to current topic):
+- Details: "Who else was there with you? Can you paint the scene for me?"
+- Sensory: "What do you remember seeing, hearing, or smelling in that moment?"
+- Emotion: "How did that make you feel? What was going through your mind?"
+- Reflection: "Looking back, what did that experience mean to you?"
+- Story arc: "What happened next? How did that moment unfold?"
+
+Generate ONE warm, specific follow-up about "{current_core_question}":
 """
         else:
-            # Move to next core question or check phase completion
+            # Story feels complete - ask confirmation before moving on
+            # BUT only if we have collected reasonable amount of content
+            MIN_WORDS_FOR_CONFIRMATION = 300  # At least 50% of target
+            MIN_FOLLOWUPS_FOR_CONFIRMATION = 3  # At least 3 follow-ups asked
+            
+            if (completeness.get("is_complete") and 
+                followup_count >= MIN_FOLLOWUPS_FOR_CONFIRMATION and
+                total_words_for_core >= MIN_WORDS_FOR_CONFIRMATION):
+                print("DEBUG: Story complete with sufficient content, asking confirmation")
+                return "That's a wonderful memory. Is there anything more you'd like to share about this, or shall we move on?"
+            
+            # If story marked complete but insufficient content, continue with follow-ups
+            if completeness.get("is_complete") and followup_count < MAX_FOLLOWUPS_PER_CORE:
+                print(f"DEBUG: Story marked complete but only {total_words_for_core} words, forcing more follow-ups")
+                needs_more_followups = True
+                # Generate follow-up (reuse the logic from above)
+                missing = completeness.get("missing_elements", [])
+                if "emotion" in str(missing).lower():
+                    focus_area = "emotional depth - feelings, reactions, significance"
+                elif "reflection" in str(missing).lower():
+                    focus_area = "deeper reflection - meaning, impact, life lessons"
+                elif depth_score < 30:
+                    focus_area = "basic details - WHO, WHAT, WHERE, WHEN, WHY, HOW"
+                elif depth_score < 50:
+                    focus_area = "sensory details - sights, sounds, smells, atmosphere"
+                else:
+                    focus_area = "deeper context - relationships, significance, connections"
+                
+                already_asked = "\n".join([f"- {q}" for q in all_asked_questions])
+                
+                prompt = f"""
+You are a warm British interviewer capturing a complete life story.
+
+CURRENT CORE QUESTION: "{current_core_question}"
+User's latest response: "{user_input}"
+
+Progress: Only {total_words_for_core}/{TARGET_WORDS_PER_QUESTION} words collected
+Focus area: {focus_area}
+
+IMPORTANT: We need more depth. DO NOT repeat these questions:
+{already_asked}
+
+Generate ONE warm follow-up that explores {focus_area}:
+"""
+                
+                response = await client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": self._get_british_system_prompt()},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.7
+                )
+                
+                followup = response.choices[0].message.content.strip()
+                await memory_service.add_message(user_id, session_id, "Assistant", followup)
+                return followup
+            
+            # Move to next core question
             print("DEBUG: Moving to next core question")
             if unanswered_core:
                 next_core = unanswered_core[0]
                 print(f"DEBUG: Next core question: {next_core}")
+                # Return ONLY the core question without transition phrases
+                # This ensures the question is saved correctly in database
                 return next_core
             else:
-                # All core questions done - check for incomplete phases
-                print("DEBUG: Phase complete, checking other phases")
-                return "PHASE_COMPLETE"  # Signal to interview route
+                print("DEBUG: Phase complete")
+                return "PHASE_COMPLETE"
         
         response = await client.chat.completions.create(
             model=self.model,
