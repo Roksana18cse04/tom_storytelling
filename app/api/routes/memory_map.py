@@ -72,7 +72,12 @@ async def get_user_memory_map(user_id: str):
 
     memory_map = {}
     for session_id in user_sessions:
-        memory_map[session_id] = await memory_service.get_user_memories(user_id, session_id)
+        session_data = await memory_service.get_user_memories(user_id, session_id)
+        # Convert ObjectId to string
+        for category, memories in session_data.items():
+            for mem in memories:
+                mem["_id"] = str(mem["_id"])
+        memory_map[session_id] = session_data
 
     return {"user_id": user_id, "sessions": memory_map}
 
@@ -85,6 +90,11 @@ async def get_session_memory(user_id: str, session_id: str):
     session_data = await memory_service.get_user_memories(user_id, session_id)
     if not session_data:
         raise HTTPException(status_code=404, detail=f"No memories found for session '{session_id}'")
+
+    # Convert ObjectId to string
+    for category, memories in session_data.items():
+        for mem in memories:
+            mem["_id"] = str(mem["_id"])
 
     # Find last unanswered question
     last_question = None
@@ -117,6 +127,10 @@ async def get_category_memories(user_id: str, session_id: str, category: str):
             status_code=404,
             detail=f"No memories found in category '{category}' for session '{session_id}'"
         )
+
+    # Convert ObjectId to string
+    for mem in category_data:
+        mem["_id"] = str(mem["_id"])
 
     return {
         "user_id": user_id,
