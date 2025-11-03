@@ -96,16 +96,24 @@ async def get_session_memory(user_id: str, session_id: str):
         for mem in memories:
             mem["_id"] = str(mem["_id"])
 
-    # Find last unanswered question
+    # Find last unanswered question or phase complete message
     last_question = None
     all_memories = []
     for category, memories in session_data.items():
         all_memories.extend(memories)
     
-    # Iterate from end to find last unanswered
+    # Iterate from end to find last unanswered or special message
     for mem in reversed(all_memories):
-        if mem.get('question') and not mem.get('response', '').strip():
-            last_question = mem['question']
+        question = mem.get('question', '')
+        response = mem.get('response', '').strip()
+        
+        # Check for phase complete messages
+        if question in ['PHASE_COMPLETE_MESSAGE', 'ALL_PHASES_COMPLETE_MESSAGE']:
+            last_question = response  # The message itself
+            break
+        # Check for unanswered questions
+        elif question and not response:
+            last_question = question
             break
 
     return {
@@ -121,6 +129,8 @@ async def get_category_memories(user_id: str, session_id: str, category: str):
     """
     Return all memories in a specific category for a specific session of a user.
     """
+    # Convert to lowercase for case-insensitive matching
+    category = category.lower()
     category_data = await memory_service.get_category_memories(user_id, session_id, category)
     if not category_data:
         raise HTTPException(

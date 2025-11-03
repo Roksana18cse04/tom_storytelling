@@ -541,7 +541,7 @@ Generate ONE warm follow-up that explores {focus_area}:
                 # This ensures the question is saved correctly in database
                 return next_core
             else:
-                print("DEBUG: Phase complete")
+                print("DEBUG: Phase complete - returning special marker")
                 return "PHASE_COMPLETE"
         
         response = await client.chat.completions.create(

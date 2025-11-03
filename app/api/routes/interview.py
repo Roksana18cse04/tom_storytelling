@@ -176,8 +176,19 @@ async def interview(
                 }
             else:
                 # No more questions in this phase
+                phase_complete_msg = f"You've covered all the questions in {category.replace('_', ' ')}! Would you like to explore another phase?"
+                
+                # Save phase complete message
+                await memory_service.add_memory(
+                    user_id=user_id,
+                    session_id=session_id,
+                    category=category,
+                    question="PHASE_COMPLETE_MESSAGE",
+                    response=phase_complete_msg
+                )
+                
                 return {
-                    "response": f"You've covered all the questions in {category.replace('_', ' ')}! Would you like to explore another phase?",
+                    "response": phase_complete_msg,
                     "current_category": category,
                     "phase_complete": True
                 }
@@ -227,10 +238,21 @@ async def interview(
                 else:
                     suggestion_text = f"{', '.join(phase_names[:-1])}, or {phase_names[-1]}"
                 
+                phase_complete_message = (f"Thank you for sharing those wonderful memories about your {category.replace('_', ' ')}. "
+                                         f"If you'd like, we could explore your {suggestion_text} next. "
+                                         f"Which would you prefer?")
+                
+                # Save phase complete message as special memory
+                await memory_service.add_memory(
+                    user_id=user_id,
+                    session_id=session_id,
+                    category=category,
+                    question="PHASE_COMPLETE_MESSAGE",
+                    response=phase_complete_message
+                )
+                
                 return {
-                    "response": f"Thank you for sharing those wonderful memories about your {category.replace('_', ' ')}. "
-                               f"If you'd like, we could explore your {suggestion_text} next. "
-                               f"Which would you prefer?",
+                    "response": phase_complete_message,
                     "current_category": category,
                     "phase_complete": True,
                     "suggested_phases": [p for p, _ in suggestions],
@@ -238,9 +260,20 @@ async def interview(
                 }
             else:
                 # All phases complete!
+                all_complete_message = ("What a wonderful journey through your life story! You've shared so many beautiful memories. "
+                                       "Is there anything else you'd like to add or any phase you'd like to revisit?")
+                
+                # Save all phases complete message as special memory
+                await memory_service.add_memory(
+                    user_id=user_id,
+                    session_id=session_id,
+                    category=category,
+                    question="ALL_PHASES_COMPLETE_MESSAGE",
+                    response=all_complete_message
+                )
+                
                 return {
-                    "response": "What a wonderful journey through your life story! You've shared so many beautiful memories. "
-                               "Is there anything else you'd like to add or any phase you'd like to revisit?",
+                    "response": all_complete_message,
                     "current_category": category,
                     "all_phases_complete": True
                 }

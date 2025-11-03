@@ -13,6 +13,7 @@ async def generate_chapter(
     style: str = Query("conversational", description="Style: conversational, literary, formal, reflective, light_hearted or concise")
 ):
     """Generate a narrative chapter for a specific category."""
+    category = category.lower()
     chapter = await narrative_engine.generate_chapter(user_id, session_id, category, style)
     if chapter.startswith("No ") or chapter.startswith("Error"):
         raise HTTPException(status_code=404, detail=chapter)
