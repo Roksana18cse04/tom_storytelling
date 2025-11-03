@@ -4,8 +4,10 @@ from app.services.llm_services import LLMService
 from app.services.transcription_services import transcribe_audio
 from app.services.memory_services_mongodb import mongo_memory_service as memory_service
 from app.questions.questions import QUESTION_BANK
+from app.services.photo_service import photo_service
 from typing import Optional
 import logging
+from bson import ObjectId
 
 router = APIRouter()
 llm = LLMService()
@@ -13,6 +15,134 @@ logger = logging.getLogger(__name__)
 
 # Default minimum questions for phases without defined question bank
 DEFAULT_MIN_QUESTIONS = 5
+MAX_PHOTO_FOLLOWUPS = 4
+
+async def handle_photo_answer(user_id: str, session_id: str, memory_id: str, text: str):
+    """Handle photo answer through interview route"""
+    from app.core.database import memories_collection
+    
+    try:
+        obj_id = ObjectId(memory_id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid memory_id format")
+    
+    session_data = await memory_service.get_user_memories(user_id, session_id)
+    target_memory = None
+    old_category = None
+    
+    for category, memories in session_data.items():
+        for mem in memories:
+            if mem["_id"] == obj_id:
+                target_memory = mem
+                old_category = category
+                break
+        if target_memory:
+            break
+    
+    if not target_memory:
+        raise HTTPException(status_code=404, detail="Photo memory not found")
+    
+    photo_url = target_memory.get("photos", [None])[0]
+    if photo_url:
+        photo_url = photo_url.rstrip('.')
+    
+    current_response = target_memory.get("response", "")
+    updated_response = f"{current_response}\n\n{text}" if current_response else text
+    
+    await memories_collection.update_one(
+        {"_id": obj_id},
+        {"$set": {"response": updated_response, "snippet": memory_service._generate_snippet(updated_response)}}
+    )
+    
+    conversation_history = []
+    if target_memory.get("question"):
+        conversation_history.append({"question": target_memory.get("question"), "answer": text})
+    
+    followup_count = len(conversation_history) - 1
+    needs_depth = photo_service._needs_depth_exploration(text, conversation_history)
+    
+    if needs_depth and followup_count < MAX_PHOTO_FOLLOWUPS:
+        followup = await photo_service.generate_photo_followup(photo_url, conversation_history, text, followup_count + 1)
+        
+        if followup:
+            detected_category = memory_service.detect_initial_phase(updated_response)
+            if detected_category == "ASK_USER":
+                detected_category = old_category
+            
+            await memories_collection.update_one(
+                {"_id": obj_id},
+                {"$set": {"question": followup, "category": detected_category}}
+            )
+            
+            return {
+                "response": followup,
+                "current_category": detected_category,
+                "followup_count": followup_count + 1,
+                "has_followup": True,
+                "is_photo_answer": True
+            }
+    
+    detected_category = memory_service.detect_initial_phase(updated_response)
+    if detected_category == "ASK_USER":
+        detected_category = old_category
+    
+    caption = await photo_service.generate_caption(updated_response, photo_url)
+    
+    await memories_collection.update_one(
+        {"_id": obj_id},
+        {"$set": {"photo_caption": caption, "category": detected_category}}
+    )
+    
+    # Get last unanswered interview question
+    await memory_service.set_phase(user_id, session_id, detected_category)
+    user_data = await memory_service.get_user_memories(user_id, session_id)
+    
+    last_question = None
+    if detected_category in user_data and user_data[detected_category]:
+        for mem in reversed(user_data[detected_category]):
+            if mem["question"] and not mem["response"].strip():
+                last_question = mem["question"]
+                break
+    
+    if last_question:
+        return {
+            "response": f"Thank you for sharing that memory! Let's continue: {last_question}",
+            "current_category": detected_category,
+            "photo_complete": True,
+            "is_photo_answer": True
+        }
+    else:
+        core_questions = QUESTION_BANK.get(detected_category, {}).get("questions", [])
+        answered_questions = [m.get("question") for m in user_data.get(detected_category, []) if m.get("response", "").strip()]
+        
+        next_question = None
+        for q in core_questions:
+            if q not in answered_questions:
+                next_question = q
+                break
+        
+        if next_question:
+            await memory_service.add_memory(
+                user_id=user_id,
+                session_id=session_id,
+                category=detected_category,
+                question=next_question,
+                response=""
+            )
+            return {
+                "response": f"Thank you for sharing that memory! Now, {next_question}",
+                "current_category": detected_category,
+                "photo_complete": True,
+                "is_photo_answer": True
+            }
+        else:
+            return {
+                "response": "Thank you for sharing that memory! You've covered all questions in this phase. Would you like to explore another phase?",
+                "current_category": detected_category,
+                "photo_complete": True,
+                "phase_complete": True,
+                "is_photo_answer": True
+            }
 
 @router.post("/")
 async def interview(
@@ -20,12 +150,17 @@ async def interview(
     session_id: str = Form(...),
     text: Optional[str] = Form(None),
     audio: Optional[UploadFile] = None,
+    memory_id: Optional[str] = Form(None),  # For photo answers
 ):
     try:
         if audio:
             text = await transcribe_audio(audio)
         if not text:
             raise HTTPException(status_code=400, detail="Either text or audio must be provided.")
+        
+        # If memory_id provided and not empty, this is a photo answer
+        if memory_id and memory_id.strip():
+            return await handle_photo_answer(user_id, session_id, memory_id, text)
 
         # Get current phase
         category = await memory_service.get_phase(user_id, session_id)

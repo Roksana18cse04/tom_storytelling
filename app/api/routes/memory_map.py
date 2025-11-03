@@ -91,10 +91,12 @@ async def get_session_memory(user_id: str, session_id: str):
     if not session_data:
         raise HTTPException(status_code=404, detail=f"No memories found for session '{session_id}'")
 
-    # Convert ObjectId to string
+    # Convert ObjectId to string and add memory_id field
     for category, memories in session_data.items():
         for mem in memories:
             mem["_id"] = str(mem["_id"])
+            mem["memory_id"] = mem["_id"]  # Add memory_id for frontend
+            mem["is_photo"] = bool(mem.get("photos") and len(mem.get("photos", [])) > 0)  # Flag for photo memories
 
     # Find last unanswered question
     last_question = None
