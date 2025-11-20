@@ -233,7 +233,7 @@ class MemoryService:
                         "category": category,
                         "snippet": mem["snippet"],
                         "common_keywords": list(overlap),
-                        "timestamp": mem["timestamp"]
+                        "timestamp": mem["timestamp"]  
                     })
         
         return related[:5]  # Top 5 related memories

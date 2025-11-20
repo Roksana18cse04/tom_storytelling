@@ -1,7 +1,7 @@
 # app/services/memory_services_mongodb.py
 
-import uuid, datetime, re
-from typing import Dict, List
+import uuid, datetime, re, random
+from typing import Dict, List, Optional
 from app.questions.questions import QUESTION_BANK
 from app.core.database import memories_collection, user_phases_collection
 
@@ -66,7 +66,7 @@ class MongoMemoryService:
 
     # ─── Memory Management ────────────────────────
     async def add_memory(self, user_id: str, session_id: str, category: str,
-                   question: str, response: str, photos=None, audio_clips=None, contributors=None, photo_caption=None):
+                   question: str, response: str, photos=None, audio_clips=None, contributors=None, photo_caption=None, display_text: Optional[str] = None):
         photos = photos or []
         audio_clips = audio_clips or []
         contributors = contributors or []
@@ -83,6 +83,7 @@ class MongoMemoryService:
             "category": category,
             "question": question,
             "response": response,
+            "display_text": display_text,
             "snippet": snippet,
             "depth_score": depth_data["total_score"] if depth_data else 0,
             "depth_level": depth_data["depth_level"] if depth_data else "Minimal",
@@ -154,14 +155,17 @@ class MongoMemoryService:
 
     # ─── Progress Tracking ────────────────────────
     async def get_progress(self, user_id: str, session_id: str) -> Dict[str, float]:
-        """Calculate completion percentage for each category."""
+        """Calculate completion percentage for each category based on core questions only."""
         session_data = await self.get_user_memories(user_id, session_id)
         progress = {}
         DEFAULT_TARGET = 5
         
         for category in QUESTION_BANK.keys():
-            answered = len([m for m in session_data.get(category, []) if m["response"].strip()])
-            total_questions = len(QUESTION_BANK[category]["questions"]) if category in QUESTION_BANK else DEFAULT_TARGET
+            core_questions = QUESTION_BANK[category]["questions"] if category in QUESTION_BANK else []
+            # Count only answered core questions
+            answered = len([m for m in session_data.get(category, []) 
+                          if m["response"].strip() and m["question"] in core_questions])
+            total_questions = len(core_questions) if core_questions else DEFAULT_TARGET
             progress[category] = round((answered / total_questions) * 100, 1) if total_questions > 0 else 0.0
         
         return progress

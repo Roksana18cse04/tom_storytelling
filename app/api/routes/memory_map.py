@@ -73,10 +73,13 @@ async def get_user_memory_map(user_id: str):
     memory_map = {}
     for session_id in user_sessions:
         session_data = await memory_service.get_user_memories(user_id, session_id)
-        # Convert ObjectId to string
+        # Convert ObjectId to string and add display field
         for category, memories in session_data.items():
             for mem in memories:
                 mem["_id"] = str(mem["_id"])
+                mem["memory_id"] = str(mem["_id"])
+                mem["is_photo"] = bool(mem.get("photos"))
+                mem["question_display"] = mem.get("display_text") or mem.get("question")
         memory_map[session_id] = session_data
 
     return {"user_id": user_id, "sessions": memory_map}
@@ -91,10 +94,14 @@ async def get_session_memory(user_id: str, session_id: str):
     if not session_data:
         raise HTTPException(status_code=404, detail=f"No memories found for session '{session_id}'")
 
-    # Convert ObjectId to string
+    # Convert ObjectId to string and add display field
     for category, memories in session_data.items():
         for mem in memories:
             mem["_id"] = str(mem["_id"])
+            mem["memory_id"] = str(mem["_id"])
+            mem["is_photo"] = bool(mem.get("photos"))
+            # Use display_text if available, otherwise use question
+            mem["question_display"] = mem.get("display_text") or mem.get("question")
 
     # Find last unanswered question or phase complete message
     last_question = None
@@ -113,7 +120,8 @@ async def get_session_memory(user_id: str, session_id: str):
             break
         # Check for unanswered questions
         elif question and not response:
-            last_question = question
+            # Use display_text if available for last question
+            last_question = mem.get('display_text') or question
             break
 
     return {
@@ -138,9 +146,13 @@ async def get_category_memories(user_id: str, session_id: str, category: str):
             detail=f"No memories found in category '{category}' for session '{session_id}'"
         )
 
-    # Convert ObjectId to string
+    # Convert ObjectId to string and add display field
     for mem in category_data:
         mem["_id"] = str(mem["_id"])
+        mem["memory_id"] = str(mem["_id"])
+        mem["is_photo"] = bool(mem.get("photos"))
+        # Use display_text if available, otherwise use question
+        mem["question_display"] = mem.get("display_text") or mem.get("question")
 
     return {
         "user_id": user_id,
