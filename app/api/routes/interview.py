@@ -435,7 +435,7 @@ async def interview(
             category=category,
             question=followup,
             response="",
-            display_text=display_question if is_core_question else None
+            display_text=display_question
         )
         
         # Get updated category after followup (in case it changed)

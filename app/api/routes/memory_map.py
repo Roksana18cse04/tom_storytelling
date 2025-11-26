@@ -103,26 +103,28 @@ async def get_session_memory(user_id: str, session_id: str):
             # Use display_text if available, otherwise use question
             mem["question_display"] = mem.get("display_text") or mem.get("question")
 
-    # Find last unanswered question or phase complete message
-    last_question = None
-    all_memories = []
-    for category, memories in session_data.items():
-        all_memories.extend(memories)
+    # Find last question/message from current phase
+    from app.services.memory_services_mongodb import mongo_memory_service
+    current_phase = await mongo_memory_service.get_phase(user_id, session_id)
     
-    # Iterate from end to find last unanswered or special message
-    for mem in reversed(all_memories):
-        question = mem.get('question', '')
-        response = mem.get('response', '').strip()
+    last_question = None
+    if current_phase and current_phase in session_data:
+        phase_memories = session_data[current_phase]
+        # Sort by timestamp to get the most recent entry in current phase
+        phase_memories.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
         
-        # Check for phase complete messages
-        if question in ['PHASE_COMPLETE_MESSAGE', 'ALL_PHASES_COMPLETE_MESSAGE']:
-            last_question = response  # The message itself
-            break
-        # Check for unanswered questions
-        elif question and not response:
-            # Use display_text if available for last question
-            last_question = mem.get('display_text') or question
-            break
+        # Get the last memory entry (most recent) from current phase
+        if phase_memories:
+            last_mem = phase_memories[0]
+            question = last_mem.get('question', '')
+            response = last_mem.get('response', '').strip()
+            
+            # Check for phase complete messages
+            if question in ['PHASE_COMPLETE_MESSAGE', 'ALL_PHASES_COMPLETE_MESSAGE']:
+                last_question = response  # The message itself
+            # For any question (answered or unanswered), use display_text if available
+            elif question:
+                last_question = last_mem.get('display_text') or question
 
     return {
         "user_id": user_id,
