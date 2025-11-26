@@ -72,30 +72,84 @@ async def interview(
             category = detected_phase
             await memory_service.set_phase(user_id, session_id, category)
             
-            # Get first question from new phase
+            # Reload user_data after phase change to get fresh data
+            user_data = await memory_service.get_user_memories(user_id, session_id)
+            
+            # Smart Resume: Check if category has existing memories
             core_questions = QUESTION_BANK.get(category, {}).get("questions", [])
-            if core_questions:
-                first_question = core_questions[0]
-                display_text = f"Wonderful! Let's explore your {category.replace('_', ' ')}. {first_question}"
-                await memory_service.add_memory(
-                    user_id=user_id,
-                    session_id=session_id,
-                    category=category,
-                    question=first_question,
-                    response="",
-                    display_text=display_text
-                )
-                return {
-                    "response": display_text,
-                    "current_category": category,
-                    "phase_selected": True
-                }
+            category_memories = user_data.get(category, [])
+            
+            if not category_memories:
+                # EMPTY → Start with 1st core question
+                if core_questions:
+                    first_question = core_questions[0]
+                    display_text = f"Wonderful! Let's explore your {category.replace('_', ' ')}. {first_question}"
+                    await memory_service.add_memory(
+                        user_id=user_id,
+                        session_id=session_id,
+                        category=category,
+                        question=first_question,
+                        response="",
+                        display_text=display_text
+                    )
+                    return {
+                        "response": display_text,
+                        "current_category": category,
+                        "phase_selected": True
+                    }
+                else:
+                    return {
+                        "response": f"Wonderful! Let's explore your {category.replace('_', ' ')}. What would you like to share first?",
+                        "current_category": category,
+                        "phase_selected": True
+                    }
             else:
-                return {
-                    "response": f"Wonderful! Let's explore your {category.replace('_', ' ')}. What would you like to share first?",
-                    "current_category": category,
-                    "phase_selected": True
-                }
+                # HAS MEMORIES → Find last unanswered question
+                last_unanswered = None
+                for mem in reversed(category_memories):
+                    if mem.get("question") and not mem.get("response", "").strip():
+                        last_unanswered = mem.get("question")
+                        break
+                
+                if last_unanswered:
+                    # Found unanswered question → Welcome back message
+                    display_text = f"Welcome back! Your last question was: \"{last_unanswered}\" but you didn't answer this. Please answer this question."
+                    
+                    # Update existing memory with display_text so memory map API can show it
+                    from app.core.database import memories_collection
+                    await memories_collection.update_one(
+                        {
+                            "user_id": user_id,
+                            "session_id": session_id,
+                            "category": category,
+                            "question": last_unanswered
+                        },
+                        {"$set": {"display_text": display_text}}
+                    )
+                    
+                    return {
+                        "response": display_text,
+                        "current_category": category,
+                        "is_reminder": True
+                    }
+                else:
+                    # All questions have responses → Start with 1st question
+                    if core_questions:
+                        first_question = core_questions[0]
+                        display_text = f"Wonderful! Let's explore your {category.replace('_', ' ')}. {first_question}"
+                        await memory_service.add_memory(
+                            user_id=user_id,
+                            session_id=session_id,
+                            category=category,
+                            question=first_question,
+                            response="",
+                            display_text=display_text
+                        )
+                        return {
+                            "response": display_text,
+                            "current_category": category,
+                            "phase_selected": True
+                        }
         
         # If no phase detected and category is None, use detect_initial_phase
         if category is None and detected_phase is None:
