@@ -105,13 +105,21 @@ async def get_session_memory(user_id: str, session_id: str):
 
     # Find last question/message from current phase
     from app.services.memory_services_mongodb import mongo_memory_service
+    from datetime import datetime
     current_phase = await mongo_memory_service.get_phase(user_id, session_id)
     
     last_question = None
     if current_phase and current_phase in session_data:
         phase_memories = session_data[current_phase]
-        # Sort by timestamp to get the most recent entry in current phase
-        phase_memories.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        
+        # Sort by timestamp - handle both datetime objects and strings
+        def get_sort_key(mem):
+            ts = mem.get('timestamp', '')
+            if isinstance(ts, datetime):
+                return ts.isoformat()
+            return ts or ''
+        
+        phase_memories.sort(key=get_sort_key, reverse=True)
         
         # Get the last memory entry (most recent) from current phase
         if phase_memories:

@@ -66,8 +66,8 @@ async def interview(
                     detected_phase = phase_name
                     break
         
-        # If phase detected and either no current category OR different category
-        if detected_phase and (category is None or detected_phase != category):
+        # If phase detected (including same category re-selection)
+        if detected_phase:
             # User explicitly wants to switch phase
             category = detected_phase
             await memory_service.set_phase(user_id, session_id, category)
