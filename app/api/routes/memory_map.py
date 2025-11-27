@@ -138,7 +138,8 @@ async def get_session_memory(user_id: str, session_id: str):
         "user_id": user_id,
         "session_id": session_id,
         "categories": session_data,
-        "last_question": last_question
+        "last_question": last_question,
+        "current_category": current_phase
     }
 
 
