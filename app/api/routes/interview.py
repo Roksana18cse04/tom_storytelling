@@ -339,6 +339,52 @@ async def interview(
         
         followup = await llm.generate_followup(user_id, session_id, text)
         
+        # Handle CLOSING_Q1: Save with empty response so it appears in last_question
+        if followup == "CLOSING_Q1":
+            closing_q1_text = "Thanks for sharing your memories. Is there anything else you'd like to share about this part of your life?"
+            await memory_service.add_memory(
+                user_id=user_id,
+                session_id=session_id,
+                category=category,
+                question="CLOSING_Q1",
+                response="",
+                display_text=closing_q1_text
+            )
+            return {
+                "response": closing_q1_text,
+                "current_category": category,
+                "memory_saved": True
+            }
+        
+        # Handle CLOSING_Q2: Save temporarily with empty response
+        if followup == "CLOSING_Q2":
+            # First, update CLOSING_Q1 with user's answer (already saved in line 335)
+            # Now save CLOSING_Q2 temporarily
+            closing_q2_text = "Thank you. Are you happy to move on?"
+            await memory_service.add_memory(
+                user_id=user_id,
+                session_id=session_id,
+                category=category,
+                question="CLOSING_Q2",
+                response="",
+                display_text=closing_q2_text
+            )
+            return {
+                "response": closing_q2_text,
+                "current_category": category,
+                "memory_saved": True
+            }
+        
+        # If user just answered CLOSING_Q2, delete it from memory (don't keep the answer)
+        if last_question and "CLOSING_Q2" in last_question:
+            from app.core.database import memories_collection
+            await memories_collection.delete_one({
+                "user_id": user_id,
+                "session_id": session_id,
+                "category": category,
+                "question": "CLOSING_Q2"
+            })
+        
         # Check if phase is complete
         if followup == "PHASE_COMPLETE":
             # Calculate progress for all phases

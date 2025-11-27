@@ -265,6 +265,22 @@ Respond in JSON format:
         last_question = last_memory.get("question") if last_memory else None
         last_response = last_memory.get("response", "").strip() if last_memory else ""
         
+        # Check if user just answered CLOSING_Q1 → Return CLOSING_Q2
+        if last_question and "CLOSING_Q1" in last_question:
+            print("DEBUG: User answered CLOSING_Q1, returning CLOSING_Q2")
+            return "CLOSING_Q2"
+        
+        # Check if user just answered CLOSING_Q2 → Move to next core question
+        if last_question and "CLOSING_Q2" in last_question:
+            print("DEBUG: User answered CLOSING_Q2, moving to next core question")
+            if unanswered_core:
+                next_core = unanswered_core[0]
+                print(f"DEBUG: Next core question: {next_core}")
+                return next_core
+            else:
+                print("DEBUG: Phase complete")
+                return "PHASE_COMPLETE"
+        
         # Find which core question we're currently exploring
         current_core_question = None
         for mem in reversed(category_memories):
@@ -482,8 +498,8 @@ Generate ONE warm, specific follow-up about "{current_core_question}":
             if (completeness.get("is_complete") and 
                 followup_count >= MIN_FOLLOWUPS_FOR_CONFIRMATION and
                 total_words_for_core >= MIN_WORDS_FOR_CONFIRMATION):
-                print("DEBUG: Story complete with sufficient content, asking confirmation")
-                return "That's a wonderful memory. Is there anything more you'd like to share about this, or shall we move on?"
+                print("DEBUG: Story complete with sufficient content, asking CLOSING_Q1")
+                return "CLOSING_Q1"
             
             # If story marked complete but insufficient content, continue with follow-ups
             if completeness.get("is_complete") and followup_count < MAX_FOLLOWUPS_PER_CORE:
