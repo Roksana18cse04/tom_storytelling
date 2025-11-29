@@ -307,20 +307,24 @@ async def interview(
                     "skipped_question": last_question
                 }
             else:
-                # No more questions in this phase
-                phase_complete_msg = f"You've covered all the questions in {category.replace('_', ' ')}! Would you like to explore another phase?\n\n[Hint: To change phase, just write 'yes' or mention the phase name]"
+                # No more questions - show add more prompt
+                category_display = category.replace('_', ' ').title()
+                add_more_text = (f"You've answered all of Narratus' questions for {category_display}, "
+                                f"but please feel free to share anything important that we may have missed, "
+                                f"or maybe some reflections on this time of your life. "
+                                f"When you're finished, just click Submit.")
                 
-                # Save phase complete message
                 await memory_service.add_memory(
                     user_id=user_id,
                     session_id=session_id,
                     category=category,
-                    question="PHASE_COMPLETE_MESSAGE",
-                    response=phase_complete_msg
+                    question="ADD_MORE_PROMPT",
+                    response="",
+                    display_text=add_more_text
                 )
                 
                 return {
-                    "response": phase_complete_msg,
+                    "response": add_more_text,
                     "current_category": category,
                     "phase_complete": True
                 }
@@ -387,81 +391,27 @@ async def interview(
         
         # Check if phase is complete
         if followup == "PHASE_COMPLETE":
-            # Calculate progress for all phases
-            all_phases = list(QUESTION_BANK.keys())
-            phase_progress = {}
+            # Show "Add More" prompt for completed phase
+            category_display = category.replace('_', ' ').title()
+            add_more_text = (f"You've answered all of Narratus' questions for {category_display}, "
+                            f"but please feel free to share anything important that we may have missed, "
+                            f"or maybe some reflections on this time of your life. "
+                            f"When you're finished, just click Submit.")
             
-            for phase in all_phases:
-                phase_data = user_data.get(phase, [])
-                core_questions = QUESTION_BANK[phase]["questions"]
-                total_questions = len(core_questions)
-                # Count only answered core questions
-                answered = len([m for m in phase_data 
-                              if m.get("response", "").strip() 
-                              and len(m.get("response", "").split()) > 5 
-                              and m.get("question") in core_questions])
-                progress = (answered / total_questions * 100) if total_questions > 0 else 0
-                phase_progress[phase] = {"progress": progress, "answered": answered, "total": total_questions}
+            await memory_service.add_memory(
+                user_id=user_id,
+                session_id=session_id,
+                category=category,
+                question="ADD_MORE_PROMPT",
+                response="",
+                display_text=add_more_text
+            )
             
-            # Find phases with least progress (excluding current)
-            incomplete_phases = [(p, data) for p, data in phase_progress.items() 
-                               if p != category and data["progress"] < 100]
-            incomplete_phases.sort(key=lambda x: x[1]["progress"])
-            
-            if incomplete_phases:
-                # Suggest incomplete phases naturally
-                suggestions = incomplete_phases[:3]
-                phase_names = [p.replace('_', ' ') for p, _ in suggestions]
-                
-                # Create natural suggestion text
-                if len(phase_names) == 1:
-                    suggestion_text = phase_names[0]
-                elif len(phase_names) == 2:
-                    suggestion_text = f"{phase_names[0]} or {phase_names[1]}"
-                else:
-                    suggestion_text = f"{', '.join(phase_names[:-1])}, or {phase_names[-1]}"
-                
-                phase_complete_message = (f"Thank you for sharing those wonderful memories about your {category.replace('_', ' ')}. "
-                                         f"If you'd like, we could explore your {suggestion_text} next. "
-                                         f"Which would you prefer?\n\n"
-                                         f"[Hint: Just write 'yes' or mention the phase name to continue]")
-                
-                # Save phase complete message as special memory
-                await memory_service.add_memory(
-                    user_id=user_id,
-                    session_id=session_id,
-                    category=category,
-                    question="PHASE_COMPLETE_MESSAGE",
-                    response=phase_complete_message
-                )
-                
-                return {
-                    "response": phase_complete_message,
-                    "current_category": category,
-                    "phase_complete": True,
-                    "suggested_phases": [p for p, _ in suggestions],
-                    "progress": phase_progress
-                }
-            else:
-                # All phases complete!
-                all_complete_message = ("What a wonderful journey through your life story! You've shared so many beautiful memories. "
-                                       "Is there anything else you'd like to add or any phase you'd like to revisit?\n\n"
-                                       "[Hint: Mention any phase name to revisit or add more memories]")
-                
-                # Save all phases complete message as special memory
-                await memory_service.add_memory(
-                    user_id=user_id,
-                    session_id=session_id,
-                    category=category,
-                    question="ALL_PHASES_COMPLETE_MESSAGE",
-                    response=all_complete_message
-                )
-                
-                return {
-                    "response": all_complete_message,
-                    "current_category": category,
-                    "all_phases_complete": True
-                }
+            return {
+                "response": add_more_text,
+                "current_category": category,
+                "phase_complete": True
+            }
         
         # Check if followup is a core question and add transition for display
         core_questions = QUESTION_BANK.get(category, {}).get("questions", [])

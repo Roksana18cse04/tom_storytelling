@@ -109,6 +109,7 @@ async def get_session_memory(user_id: str, session_id: str):
     current_phase = await mongo_memory_service.get_phase(user_id, session_id)
     
     last_question = None
+    is_last = False
     if current_phase and current_phase in session_data:
         phase_memories = session_data[current_phase]
         
@@ -127,8 +128,12 @@ async def get_session_memory(user_id: str, session_id: str):
             question = last_mem.get('question', '')
             response = last_mem.get('response', '').strip()
             
+            # Check if this is ADD_MORE_PROMPT (phase complete)
+            if question == 'ADD_MORE_PROMPT':
+                is_last = True
+                last_question = last_mem.get('display_text') or question
             # Check for phase complete messages
-            if question in ['PHASE_COMPLETE_MESSAGE', 'ALL_PHASES_COMPLETE_MESSAGE']:
+            elif question in ['PHASE_COMPLETE_MESSAGE', 'ALL_PHASES_COMPLETE_MESSAGE']:
                 last_question = response  # The message itself
             # For any question (answered or unanswered), use display_text if available
             elif question:
@@ -139,7 +144,8 @@ async def get_session_memory(user_id: str, session_id: str):
         "session_id": session_id,
         "categories": session_data,
         "last_question": last_question,
-        "current_category": current_phase
+        "current_category": current_phase,
+        "is_last": is_last
     }
 
 
