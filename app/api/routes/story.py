@@ -2,6 +2,8 @@
 
 from fastapi import APIRouter, HTTPException, Query
 from app.services.narrative_engine import narrative_engine
+from app.core.database import story_collection
+import datetime
 
 router = APIRouter()
 
@@ -17,6 +19,17 @@ async def generate_chapter(
     chapter = await narrative_engine.generate_chapter(user_id, session_id, category, style)
     if chapter.startswith("No ") or chapter.startswith("Error"):
         raise HTTPException(status_code=404, detail=chapter)
+    
+    # Save generated story to database
+    await story_collection.insert_one({
+        "user_id": user_id,
+        "session_id": session_id,
+        "category": category,
+        "chapter": chapter,
+        "style": style,
+        "timestamp": datetime.datetime.now().isoformat()
+    })
+    
     return {
         "user_id": user_id,
         "session_id": session_id,
