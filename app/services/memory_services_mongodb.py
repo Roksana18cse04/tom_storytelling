@@ -154,19 +154,27 @@ class MongoMemoryService:
         }
 
     # ─── Progress Tracking ────────────────────────
-    async def get_progress(self, user_id: str, session_id: str) -> Dict[str, float]:
+    async def get_progress(self, user_id: str, session_id: str) -> Dict[str, int]:
         """Calculate completion percentage for each category based on core questions only."""
         session_data = await self.get_user_memories(user_id, session_id)
         progress = {}
         DEFAULT_TARGET = 5
         
         for category in QUESTION_BANK.keys():
-            core_questions = QUESTION_BANK[category]["questions"] if category in QUESTION_BANK else []
-            # Count only answered core questions
-            answered = len([m for m in session_data.get(category, []) 
-                          if m["response"].strip() and m["question"] in core_questions])
-            total_questions = len(core_questions) if core_questions else DEFAULT_TARGET
-            progress[category] = round((answered / total_questions) * 100, 1) if total_questions > 0 else 0.0
+            category_memories = session_data.get(category, [])
+            
+            # Check if ADD_MORE_PROMPT exists (phase complete)
+            has_add_more = any(m.get("question") == "ADD_MORE_PROMPT" for m in category_memories)
+            
+            if has_add_more:
+                progress[category] = 100
+            else:
+                core_questions = QUESTION_BANK[category]["questions"] if category in QUESTION_BANK else []
+                # Count only answered core questions
+                answered = len([m for m in category_memories 
+                              if m["response"].strip() and m["question"] in core_questions])
+                total_questions = len(core_questions) if core_questions else DEFAULT_TARGET
+                progress[category] = round((answered / total_questions) * 100) if total_questions > 0 else 0
         
         return progress
 
