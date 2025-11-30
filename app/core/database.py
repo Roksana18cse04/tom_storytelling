@@ -12,4 +12,5 @@ db = client[db_name]
 # Collections
 memories_collection = db["memories"]
 user_phases_collection = db["user_phases"]
-story_collection = db["story"]
+# story_collection = db["story"]
+story_collection = db["generates"]  # Corrected collection name
