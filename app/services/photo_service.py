@@ -142,31 +142,10 @@ Generate ONE comprehensive opening question that asks for WHO, WHAT, WHERE, WHEN
     
     async def generate_photo_followup(self, image_url: str, conversation_history: list, user_answer: str, followup_number: int) -> str:
         """
-        Generate structured follow-up questions based on photo and user's answer.
+        Generate structured follow-up questions based on user's answers (no photo analysis).
         Follows a systematic approach: Context → Sensory → Emotional → Significance
         """
         try:
-            # Clean image URL - remove trailing dots
-            clean_image_url = image_url.rstrip('.')
-            logger.info(f"Original image_url: {image_url}")
-            logger.info(f"Cleaned image_url: {clean_image_url}")
-            
-            # Generate presigned URL for OpenAI to access
-            bucket_name = settings.s3_bucket_name
-            region = settings.aws_region
-            prefix = f"https://{bucket_name}.s3.{region}.amazonaws.com/"
-            
-            if clean_image_url.startswith(prefix):
-                s3_key = clean_image_url.replace(prefix, "")
-            else:
-                s3_key = clean_image_url  # fallback if already a key
-            
-            presigned_url = get_presigned_url(bucket_name, s3_key)
-            if not presigned_url:
-                raise Exception("Failed to generate presigned URL")
-            
-            logger.info(f"Generated presigned URL for image: {presigned_url}")
-            
             # Build conversation context
             history_text = "\n".join([
                 f"Q: {item['question']}\nA: {item['answer']}"
@@ -213,16 +192,13 @@ List what you found (brief):"""
 - If sadness/loss detected: "That must have been difficult. Would you like to share more, or shall we move on?"""
             
             response = await client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o-mini",
                 messages=[
                     {
                         "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": f"""You are a warm, empathetic British interviewer helping capture life stories.
+                        "content": f"""You are a warm, empathetic British interviewer helping capture life stories.
 
-Photo conversation so far:
+Conversation so far:
 {history_text}
 
 User's latest answer: "{user_answer}"
@@ -230,20 +206,21 @@ User's latest answer: "{user_answer}"
 {focus_area}
 
 Generate ONE specific follow-up question that:
-1. Builds on what they've shared
+1. Builds on what they've shared (NOT on the photo itself)
 2. Encourages deeper storytelling
 3. Uses warm, British phrasing
 4. Is empathetic if emotional language detected
+5. Does NOT ask to identify people - ask about relationships, feelings, context instead
 
 Examples based on follow-up number:
 
 Follow-up 1 (Who/What):
-- "Who else was with you in this photo?"
-- "Can you tell me about the people shown here?"
-- "What was happening at this moment?"
+- "Who else was with you at that time?"
+- "Can you tell me more about the people you mentioned?"
+- "What was happening during this moment?"
 
 Follow-up 2 (When/Where):
-- "When was this taken? What year or season?"
+- "When was this? What year or season?"
 - "Where exactly was this? Can you describe the place?"
 - "What was the occasion?"
 
@@ -254,17 +231,11 @@ Follow-up 3 (Sensory):
 
 Follow-up 4 (Emotional/Significance):
 - "How did this moment make you feel?"
-- "Why does this photo stand out in your memory?"
+- "Why does this memory stand out to you?"
 - "What made this moment special to you?"
 - If emotional: "That must have been [difficult/joyful]. Would you like to share more?"
 
-Generate ONE warm, specific follow-up question:"""
-                            },
-                            {
-                                "type": "image_url",
-                                "image_url": {"url": presigned_url}
-                            }
-                        ]
+Generate ONE warm, specific follow-up question based on their ANSWERS (not the photo):"""
                     }
                 ],
                 temperature=0.7

@@ -103,16 +103,20 @@ async def get_session_memory(user_id: str, session_id: str):
             # Use display_text if available, otherwise use question
             mem["question_display"] = mem.get("display_text") or mem.get("question")
 
-    # Find last question/message from current phase
+    # Find last question/message from ALL categories (including uncategorized photos)
     from app.services.memory_services_mongodb import mongo_memory_service
     from datetime import datetime
     current_phase = await mongo_memory_service.get_phase(user_id, session_id)
     
     last_question = None
     is_last = False
-    if current_phase and current_phase in session_data:
-        phase_memories = session_data[current_phase]
-        
+    
+    # Collect all memories from all categories and find the most recent
+    all_memories = []
+    for cat, memories in session_data.items():
+        all_memories.extend(memories)
+    
+    if all_memories:
         # Sort by timestamp - handle both datetime objects and strings
         def get_sort_key(mem):
             ts = mem.get('timestamp', '')
@@ -120,24 +124,33 @@ async def get_session_memory(user_id: str, session_id: str):
                 return ts.isoformat()
             return ts or ''
         
-        phase_memories.sort(key=get_sort_key, reverse=True)
+        all_memories.sort(key=get_sort_key, reverse=True)
         
-        # Get the last memory entry (most recent) from current phase
-        if phase_memories:
-            last_mem = phase_memories[0]
-            question = last_mem.get('question', '')
-            response = last_mem.get('response', '').strip()
-            
-            # Check if this is ADD_MORE_PROMPT (phase complete)
-            if question == 'ADD_MORE_PROMPT':
-                is_last = True
-                last_question = last_mem.get('display_text') or question
-            # Check for phase complete messages
-            elif question in ['PHASE_COMPLETE_MESSAGE', 'ALL_PHASES_COMPLETE_MESSAGE']:
-                last_question = response  # The message itself
-            # For any question (answered or unanswered), use display_text if available
-            elif question:
-                last_question = last_mem.get('display_text') or question
+        # Get the most recent memory entry across all categories
+        last_mem = all_memories[0]
+        question = last_mem.get('question', '')
+        response = last_mem.get('response', '').strip()
+        
+        # Check if this is ADD_MORE_PROMPT (phase complete)
+        if question == 'ADD_MORE_PROMPT':
+            is_last = True
+            last_question = last_mem.get('display_text') or question
+        # Check for phase complete messages
+        elif question in ['PHASE_COMPLETE_MESSAGE', 'ALL_PHASES_COMPLETE_MESSAGE']:
+            last_question = response  # The message itself
+        # For any question (answered or unanswered), use display_text if available
+        elif question:
+            last_question = last_mem.get('display_text') or question
+        
+        # Get photo_complete status - check if photo has 5+ answers (1 initial + 4 followups)
+        photo_complete = False
+        if last_mem.get('photos'):  # This is a photo memory
+            response = last_mem.get('response', '')
+            if response:
+                answer_count = len(response.split('\n\n'))
+                # 1 initial answer + 4 followups = 5 total answers
+                if answer_count >= 5:
+                    photo_complete = True
 
     return {
         "user_id": user_id,
@@ -145,7 +158,8 @@ async def get_session_memory(user_id: str, session_id: str):
         "categories": session_data,
         "last_question": last_question,
         "current_category": current_phase,
-        "is_last": is_last
+        "is_last": is_last,
+        "photo_complete": photo_complete
     }
 
 

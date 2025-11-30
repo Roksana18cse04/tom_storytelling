@@ -28,7 +28,7 @@ async def generate_chapter(
     # If exists, return from database (cached)
     if existing_story:
         return {
-            "_id": f"ObjectId('{existing_story['_id']}')",
+            "_id": str(existing_story['_id']),
             "user_id": user_id,
             "session_id": session_id,
             "category": category,
@@ -53,7 +53,7 @@ async def generate_chapter(
     })
     
     return {
-        "_id": f"ObjectId('{result.inserted_id}')",
+        "_id": str(result.inserted_id),
         "user_id": user_id,
         "session_id": session_id,
         "category": category,

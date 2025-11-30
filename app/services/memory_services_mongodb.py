@@ -33,16 +33,43 @@ class MongoMemoryService:
         """Detect appropriate starting phase from user's first input."""
         text_lower = text.lower()
         
+        # Check age first (most accurate)
+        age_match = re.search(r'\b(\d{1,2})\s*(?:years?|yrs?)\s*old\b', text_lower)
+        if age_match:
+            age = int(age_match.group(1))
+            if age <= 12: return "childhood"
+            if age <= 19: return "teenage years"
+            if age <= 30: return "early adulthood"
+            if age <= 50: return "career work"
+            return "later life & reflections"
+        
+        # Check for exact phrase matches first (most specific)
+        exact_phrases = {
+            "teenage years": "teenage years",
+            "early adulthood": "early adulthood",
+            "career work": "career work",
+            "relationships & family": "relationships & family",
+            "hobbies & adventures": "hobbies & adventures",
+            "home & community": "home & community",
+            "challenges & growth": "challenges & growth",
+            "later life & reflections": "later life & reflections"
+        }
+        
+        for phrase, category in exact_phrases.items():
+            if phrase in text_lower:
+                return category
+        
+        # Then check keywords (removed weak keywords)
         stage_map = {
-            "childhood": ["childhood", "child", "kid", "young", "elementary", "primary school", "grew up"],
             "teenage years": ["teenage", "teen", "adolescent", "high school", "secondary school", "teenager"],
-            "early adulthood": ["early adult", "young adult", "university", "college", "first job", "twenties"],
-            "career work": ["career", "work", "job", "professional", "office", "business", "employed"],
-            "relationships & family": ["married", "wedding", "spouse", "partner", "children", "parent", "family life"],
-            "hobbies & adventures": ["travel", "hobby", "adventure", "trip", "vacation", "journey", "visited", "tour"],
-            "home & community": ["moved", "neighborhood", "community", "hometown", "lived in"],
-            "challenges & growth": ["difficult", "struggle", "overcome", "challenge", "hardship"],
-            "later life & reflections": ["retired", "retirement", "grandchildren", "looking back", "reflection"]
+            "early adulthood": ["early adult", "young adult", "university", "college", "twenties"],
+            "career work": ["career", "professional", "office", "business"],
+            "relationships & family": ["married", "wedding", "spouse", "partner", "family life"],
+            "hobbies & adventures": ["travel", "adventure", "vacation", "journey"],
+            "home & community": ["neighborhood", "community", "hometown"],
+            "challenges & growth": ["struggle", "overcome", "hardship"],
+            "later life & reflections": ["retired", "retirement", "grandchildren"],
+            "childhood": ["childhood", "elementary", "primary school"]
         }
         
         for phase, keywords in stage_map.items():
@@ -52,15 +79,6 @@ class MongoMemoryService:
         vague_intents = ["share", "tell", "talk about", "memory", "story", "life"]
         if any(intent in text_lower for intent in vague_intents) and len(text.split()) < 10:
             return "ASK_USER"
-        
-        age_match = re.search(r'\b(\d{1,2})\s*(?:years?|yrs?)\s*old\b', text_lower)
-        if age_match:
-            age = int(age_match.group(1))
-            if age <= 12: return "childhood"
-            if age <= 19: return "teenage years"
-            if age <= 30: return "early adulthood"
-            if age <= 50: return "career work"
-            return "later life & reflections"
         
         return "ASK_USER"
 

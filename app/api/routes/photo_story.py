@@ -57,10 +57,10 @@ async def photo_question(
         except:
             pass
 
-        # Get user's current phase/category
+        # Get user's current phase/category (can be None for photo uploads)
         category = await memory_service.get_phase(user_id, session_id)
         if not category:
-            category = "early adulthood"  # Default if no phase set
+            category = "uncategorized"  # Temporary category until user answers
         
         # Save to MongoDB and get the generated memory_id
         memory_id = await memory_service.add_memory(
@@ -69,7 +69,8 @@ async def photo_question(
             category=category,
             question=question,
             response="",
-            photos=[s3_url]
+            photos=[s3_url],
+            display_text=question  # Add display_text for last_question
         )
 
         return {
@@ -200,9 +201,13 @@ async def photo_answer(
                     {"_id": obj_id},
                     {"$set": {
                         "question": followup,
+                        "display_text": followup,
                         "category": detected_category
                     }}
                 )
+                
+                # Update user phase so current_category appears in memory map
+                await memory_service.set_phase(user_id, session_id, detected_category)
                 
                 return {
                     "user_id": user_id,
@@ -225,7 +230,8 @@ async def photo_answer(
             {"_id": obj_id},
             {"$set": {
                 "photo_caption": caption,
-                "category": detected_category
+                "category": detected_category,
+                "photo_complete": True
             }}
         )
         
