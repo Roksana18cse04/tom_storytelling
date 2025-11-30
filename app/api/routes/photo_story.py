@@ -173,16 +173,19 @@ async def photo_answer(
                 "is_reminder": True
             }
         
-        # Count follow-ups
+        # Count follow-ups by parsing response history
+        response_parts = updated_response.split("\n\n")
+        followup_count = len(response_parts) - 1  # First part is initial answer
+        
+        # Build conversation history for depth check
         conversation_history = []
         if target_memory.get("question"):
             conversation_history.append({
                 "question": target_memory.get("question"),
-                "answer": answer
+                "answer": updated_response
             })
         
-        followup_count = len(conversation_history) - 1
-        needs_depth = photo_service._needs_depth_exploration(answer, conversation_history)
+        needs_depth = photo_service._needs_depth_exploration(updated_response, conversation_history)
         
         if needs_depth and followup_count < MAX_PHOTO_FOLLOWUPS:
             followup = await photo_service.generate_photo_followup(photo_url, conversation_history, answer, followup_count + 1)

@@ -16,12 +16,34 @@ async def generate_chapter(
 ):
     """Generate a narrative chapter for a specific category."""
     category = category.lower()
+    
+    # Check if story already exists in database
+    existing_story = await story_collection.find_one({
+        "user_id": user_id,
+        "session_id": session_id,
+        "category": category,
+        "style": style
+    })
+    
+    # If exists, return from database (cached)
+    if existing_story:
+        return {
+            "_id": f"ObjectId('{existing_story['_id']}')",
+            "user_id": user_id,
+            "session_id": session_id,
+            "category": category,
+            "style": style,
+            "chapter": existing_story["chapter"],
+            "from_cache": True
+        }
+    
+    # Generate new story
     chapter = await narrative_engine.generate_chapter(user_id, session_id, category, style)
     if chapter.startswith("No ") or chapter.startswith("Error"):
         raise HTTPException(status_code=404, detail=chapter)
     
-    # Save generated story to database
-    await story_collection.insert_one({
+    # Save generated story to database and get inserted ID
+    result = await story_collection.insert_one({
         "user_id": user_id,
         "session_id": session_id,
         "category": category,
@@ -31,11 +53,13 @@ async def generate_chapter(
     })
     
     return {
+        "_id": f"ObjectId('{result.inserted_id}')",
         "user_id": user_id,
         "session_id": session_id,
         "category": category,
         "style": style,
-        "chapter": chapter
+        "chapter": chapter,
+        "from_cache": False
     }
 
 
