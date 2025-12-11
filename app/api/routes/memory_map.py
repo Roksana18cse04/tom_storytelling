@@ -32,31 +32,31 @@ async def get_progress(user_id: str, session_id: str):
     }
 
 
-@router.get("/related/{user_id}/{session_id}/{memory_id}")
-async def get_related_memories(user_id: str, session_id: str, memory_id: str):
-    """
-    Find memories related to a specific memory based on common keywords.
-    """
-    related = []  # TODO: Implement in MongoDB service
-    return {
-        "user_id": user_id,
-        "session_id": session_id,
-        "memory_id": memory_id,
-        "related_memories": related
-    }
+# @router.get("/related/{user_id}/{session_id}/{memory_id}")
+# async def get_related_memories(user_id: str, session_id: str, memory_id: str):
+#     """
+#     Find memories related to a specific memory based on common keywords.
+#     """
+#     related = []  # TODO: Implement in MongoDB service
+#     return {
+#         "user_id": user_id,
+#         "session_id": session_id,
+#         "memory_id": memory_id,
+#         "related_memories": related
+#     }
 
 
-@router.get("/threads/{user_id}/{session_id}")
-async def get_story_threads(user_id: str, session_id: str):
-    """
-    Detect recurring themes, people, or places across different life stages.
-    """
-    threads = []  # TODO: Implement in MongoDB service
-    return {
-        "user_id": user_id,
-        "session_id": session_id,
-        "story_threads": threads
-    }
+# @router.get("/threads/{user_id}/{session_id}")
+# async def get_story_threads(user_id: str, session_id: str):
+#     """
+#     Detect recurring themes, people, or places across different life stages.
+#     """
+#     threads = []  # TODO: Implement in MongoDB service
+#     return {
+#         "user_id": user_id,
+#         "session_id": session_id,
+#         "story_threads": threads
+#     }
 
 
 
@@ -72,7 +72,15 @@ async def get_user_memory_map(user_id: str):
 
     memory_map = {}
     for session_id in user_sessions:
-        memory_map[session_id] = await memory_service.get_user_memories(user_id, session_id)
+        session_data = await memory_service.get_user_memories(user_id, session_id)
+        # Convert ObjectId to string and add display field
+        for category, memories in session_data.items():
+            for mem in memories:
+                mem["_id"] = str(mem["_id"])
+                mem["memory_id"] = str(mem["_id"])
+                mem["is_photo"] = bool(mem.get("photos"))
+                mem["question_display"] = mem.get("display_text") or mem.get("question")
+        memory_map[session_id] = session_data
 
     return {"user_id": user_id, "sessions": memory_map}
 
@@ -86,7 +94,73 @@ async def get_session_memory(user_id: str, session_id: str):
     if not session_data:
         raise HTTPException(status_code=404, detail=f"No memories found for session '{session_id}'")
 
-    return {"user_id": user_id, "session_id": session_id, "categories": session_data}
+    # Convert ObjectId to string and add display field
+    for category, memories in session_data.items():
+        for mem in memories:
+            mem["_id"] = str(mem["_id"])
+            mem["memory_id"] = str(mem["_id"])
+            mem["is_photo"] = bool(mem.get("photos"))
+            # Use display_text if available, otherwise use question
+            mem["question_display"] = mem.get("display_text") or mem.get("question")
+
+    # Find last question/message from ALL categories (including uncategorized photos)
+    from app.services.memory_services_mongodb import mongo_memory_service
+    from datetime import datetime
+    current_phase = await mongo_memory_service.get_phase(user_id, session_id)
+    
+    last_question = None
+    is_last = False
+    
+    # Collect all memories from all categories and find the most recent
+    all_memories = []
+    for cat, memories in session_data.items():
+        all_memories.extend(memories)
+    
+    if all_memories:
+        # Sort by timestamp - handle both datetime objects and strings
+        def get_sort_key(mem):
+            ts = mem.get('timestamp', '')
+            if isinstance(ts, datetime):
+                return ts.isoformat()
+            return ts or ''
+        
+        all_memories.sort(key=get_sort_key, reverse=True)
+        
+        # Get the most recent memory entry across all categories
+        last_mem = all_memories[0]
+        question = last_mem.get('question', '')
+        response = last_mem.get('response', '').strip()
+        
+        # Check if this is ADD_MORE_PROMPT (phase complete)
+        if question == 'ADD_MORE_PROMPT':
+            is_last = True
+            last_question = last_mem.get('display_text') or question
+        # Check for phase complete messages
+        elif question in ['PHASE_COMPLETE_MESSAGE', 'ALL_PHASES_COMPLETE_MESSAGE']:
+            last_question = response  # The message itself
+        # For any question (answered or unanswered), use display_text if available
+        elif question:
+            last_question = last_mem.get('display_text') or question
+        
+        # Get photo_complete status - check if photo has 5+ answers (1 initial + 4 followups)
+        photo_complete = False
+        if last_mem.get('photos'):  # This is a photo memory
+            response = last_mem.get('response', '')
+            if response:
+                answer_count = len(response.split('\n\n'))
+                # 1 initial answer + 4 followups = 5 total answers
+                if answer_count >= 5:
+                    photo_complete = True
+
+    return {
+        "user_id": user_id,
+        "session_id": session_id,
+        "categories": session_data,
+        "last_question": last_question,
+        "current_category": current_phase,
+        "is_last": is_last,
+        "photo_complete": photo_complete
+    }
 
 
 @router.get("/{user_id}/{session_id}/{category}")
@@ -94,12 +168,22 @@ async def get_category_memories(user_id: str, session_id: str, category: str):
     """
     Return all memories in a specific category for a specific session of a user.
     """
+    # Convert to lowercase for case-insensitive matching
+    category = category.lower()
     category_data = await memory_service.get_category_memories(user_id, session_id, category)
     if not category_data:
         raise HTTPException(
             status_code=404,
             detail=f"No memories found in category '{category}' for session '{session_id}'"
         )
+
+    # Convert ObjectId to string and add display field
+    for mem in category_data:
+        mem["_id"] = str(mem["_id"])
+        mem["memory_id"] = str(mem["_id"])
+        mem["is_photo"] = bool(mem.get("photos"))
+        # Use display_text if available, otherwise use question
+        mem["question_display"] = mem.get("display_text") or mem.get("question")
 
     return {
         "user_id": user_id,

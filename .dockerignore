@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.amazonq/
+
+# Git
+.git/
+.gitignore
+
+# DVC
+.dvc/
+.dvcignore
+
+# User data (will be stored in S3)
+user_images/
+memory.json
+
+# Documentation
+*.md
+
+# Other
+.DS_Store
+*.log

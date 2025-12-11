@@ -1,7 +1,7 @@
 # app/services/memory_services_mongodb.py
 
-import uuid, datetime, re
-from typing import Dict, List
+import uuid, datetime, re, random
+from typing import Dict, List, Optional
 from app.questions.questions import QUESTION_BANK
 from app.core.database import memories_collection, user_phases_collection
 
@@ -33,14 +33,43 @@ class MongoMemoryService:
         """Detect appropriate starting phase from user's first input."""
         text_lower = text.lower()
         
+        # Check age first (most accurate)
+        age_match = re.search(r'\b(\d{1,2})\s*(?:years?|yrs?)\s*old\b', text_lower)
+        if age_match:
+            age = int(age_match.group(1))
+            if age <= 12: return "childhood"
+            if age <= 19: return "teenage years"
+            if age <= 30: return "early adulthood"
+            if age <= 50: return "career work"
+            return "later life & reflections"
+        
+        # Check for exact phrase matches first (most specific)
+        exact_phrases = {
+            "teenage years": "teenage years",
+            "early adulthood": "early adulthood",
+            "career work": "career work",
+            "relationships & family": "relationships & family",
+            "hobbies & adventures": "hobbies & adventures",
+            "home & community": "home & community",
+            "challenges & growth": "challenges & growth",
+            "later life & reflections": "later life & reflections"
+        }
+        
+        for phrase, category in exact_phrases.items():
+            if phrase in text_lower:
+                return category
+        
+        # Then check keywords (removed weak keywords)
         stage_map = {
-            "childhood": ["child", "kid", "young", "elementary", "primary school", "grew up", "born"],
-            "teenage years": ["teenage", "teen", "high school", "secondary", "adolescent"],
-            "early adulthood": ["university", "college", "first job", "twenties", "young adult", "early adult"],
-            "career work": ["career", "work", "job", "professional", "employed", "business"],
-            "relationships & family": ["married", "wedding", "spouse", "children", "parent"],
-            "hobbies & adventures": ["travel", "trip", "journey", "vacation", "adventure", "hobby", "visited"],
-            "later life & reflections": ["retired", "retirement", "grandchildren", "looking back"]
+            "teenage years": ["teenage", "teen", "adolescent", "high school", "secondary school", "teenager"],
+            "early adulthood": ["early adult", "young adult", "university", "college", "twenties"],
+            "career work": ["career", "professional", "office", "business"],
+            "relationships & family": ["married", "wedding", "spouse", "partner", "family life"],
+            "hobbies & adventures": ["travel", "adventure", "vacation", "journey"],
+            "home & community": ["neighborhood", "community", "hometown"],
+            "challenges & growth": ["struggle", "overcome", "hardship"],
+            "later life & reflections": ["retired", "retirement", "grandchildren"],
+            "childhood": ["childhood", "elementary", "primary school"]
         }
         
         for phase, keywords in stage_map.items():
@@ -51,33 +80,32 @@ class MongoMemoryService:
         if any(intent in text_lower for intent in vague_intents) and len(text.split()) < 10:
             return "ASK_USER"
         
-        age_match = re.search(r'\b(\d{1,2})\s*(?:years?|yrs?)\s*old\b', text_lower)
-        if age_match:
-            age = int(age_match.group(1))
-            if age <= 12: return "childhood"
-            if age <= 19: return "teenage years"
-            if age <= 30: return "early adulthood"
-            if age <= 50: return "career work"
-            return "later life & reflections"
-        
         return "ASK_USER"
 
     # ─── Memory Management ────────────────────────
     async def add_memory(self, user_id: str, session_id: str, category: str,
-                   question: str, response: str, photos=None, audio_clips=None, contributors=None, photo_caption=None):
+                   question: str, response: str, photos=None, audio_clips=None, contributors=None, photo_caption=None, display_text: Optional[str] = None):
         photos = photos or []
         audio_clips = audio_clips or []
         contributors = contributors or []
 
         snippet = self._generate_snippet(response)
+        
+        # Calculate depth score
+        from app.services.depth_scorer import depth_scorer
+        depth_data = depth_scorer.calculate_depth_score(response) if response else None
+        
         entry = {
-            "_id": str(uuid.uuid4()),
             "user_id": user_id,
             "session_id": session_id,
             "category": category,
             "question": question,
             "response": response,
+            "display_text": display_text,
             "snippet": snippet,
+            "depth_score": depth_data["total_score"] if depth_data else 0,
+            "depth_level": depth_data["depth_level"] if depth_data else "Minimal",
+            "depth_breakdown": depth_data["breakdown"] if depth_data else None,
             "photos": photos,
             "photo_caption": photo_caption,
             "audio_clips": audio_clips,
@@ -85,8 +113,8 @@ class MongoMemoryService:
             "timestamp": datetime.datetime.now().isoformat()
         }
 
-        await memories_collection.insert_one(entry)
-        return entry["_id"]
+        result = await memories_collection.insert_one(entry)
+        return str(result.inserted_id)
 
     async def get_user_sessions(self, user_id: str):
         """Return all session IDs for a user."""
@@ -119,27 +147,52 @@ class MongoMemoryService:
         await memories_collection.delete_many({"user_id": user_id, "session_id": session_id})
         await user_phases_collection.delete_one({"user_id": user_id, "session_id": session_id})
 
-    async def get_formatted_history(self, user_id: str, session_id: str) -> str:
+    async def get_formatted_history(self, user_id: str, session_id: str) -> dict:
         session_data = await self.get_user_memories(user_id, session_id)
         formatted_lines = []
+        last_question = None
+        all_memories = []
+        
         for category, memories in session_data.items():
             formatted_lines.append(f"--- {category.upper()} ---")
             for mem in memories:
                 formatted_lines.append(f"Q: {mem['question']}")
                 formatted_lines.append(f"A: {mem['response']}\n")
-        return "\n".join(formatted_lines)
+                all_memories.append(mem)
+        
+        # Find last unanswered question (iterate from end)
+        for mem in reversed(all_memories):
+            if mem.get('question') and not mem.get('response', '').strip():
+                last_question = mem['question']
+                break
+        
+        return {
+            "formatted_history": "\n".join(formatted_lines),
+            "last_question": last_question
+        }
 
     # ─── Progress Tracking ────────────────────────
-    async def get_progress(self, user_id: str, session_id: str) -> Dict[str, float]:
-        """Calculate completion percentage for each category."""
+    async def get_progress(self, user_id: str, session_id: str) -> Dict[str, int]:
+        """Calculate completion percentage for each category based on core questions only."""
         session_data = await self.get_user_memories(user_id, session_id)
         progress = {}
         DEFAULT_TARGET = 5
         
         for category in QUESTION_BANK.keys():
-            answered = len([m for m in session_data.get(category, []) if m["response"].strip()])
-            total_questions = len(QUESTION_BANK[category]["questions"]) if category in QUESTION_BANK else DEFAULT_TARGET
-            progress[category] = round((answered / total_questions) * 100, 1) if total_questions > 0 else 0.0
+            category_memories = session_data.get(category, [])
+            
+            # Check if ADD_MORE_PROMPT exists (phase complete)
+            has_add_more = any(m.get("question") == "ADD_MORE_PROMPT" for m in category_memories)
+            
+            if has_add_more:
+                progress[category] = 100
+            else:
+                core_questions = QUESTION_BANK[category]["questions"] if category in QUESTION_BANK else []
+                # Count only answered core questions
+                answered = len([m for m in category_memories 
+                              if m["response"].strip() and m["question"] in core_questions])
+                total_questions = len(core_questions) if core_questions else DEFAULT_TARGET
+                progress[category] = round((answered / total_questions) * 100) if total_questions > 0 else 0
         
         return progress
 

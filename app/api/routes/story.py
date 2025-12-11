@@ -2,6 +2,8 @@
 
 from fastapi import APIRouter, HTTPException, Query
 from app.services.narrative_engine import narrative_engine
+from app.core.database import story_collection
+import datetime
 
 router = APIRouter()
 
@@ -10,18 +12,54 @@ async def generate_chapter(
     user_id: str, 
     session_id: str, 
     category: str,
-    style: str = Query("memoir", description="Style: memoir or biography")
+    style: str = Query("conversational", description="Style: conversational, literary, formal, reflective, light_hearted or concise")
 ):
     """Generate a narrative chapter for a specific category."""
+    category = category.lower()
+    
+    # Check if story already exists in database
+    existing_story = await story_collection.find_one({
+        "user_id": user_id,
+        "session_id": session_id,
+        "category": category,
+        "style": style
+    })
+    
+    # If exists, return from database (cached)
+    if existing_story:
+        return {
+            "_id": str(existing_story['_id']),
+            "user_id": user_id,
+            "session_id": session_id,
+            "category": category,
+            "style": style,
+            "chapter": existing_story["chapter"],
+            "from_cache": True
+        }
+    
+    # Generate new story
     chapter = await narrative_engine.generate_chapter(user_id, session_id, category, style)
     if chapter.startswith("No ") or chapter.startswith("Error"):
         raise HTTPException(status_code=404, detail=chapter)
+    
+    # Save generated story to database and get inserted ID
+    result = await story_collection.insert_one({
+        "user_id": user_id,
+        "session_id": session_id,
+        "category": category,
+        "chapter": chapter,
+        "style": style,
+        "timestamp": datetime.datetime.now().isoformat()
+    })
+    
     return {
+        "_id": str(result.inserted_id),
         "user_id": user_id,
         "session_id": session_id,
         "category": category,
         "style": style,
-        "chapter": chapter
+        "chapter": chapter,
+        "from_cache": False
     }
 
 
@@ -29,13 +67,27 @@ async def generate_chapter(
 async def generate_full_story(
     user_id: str,
     session_id: str,
-    style: str = Query("memoir", description="Style: memoir or biography")
+    style: str = Query("conversational", description="Style: conversational, literary, formal, reflective, light_hearted or concise")
 ):
-    """Generate complete life story with all chapters."""
+    """Generate complete life story as single continuous narrative with smooth transitions."""
     result = await narrative_engine.generate_full_story(user_id, session_id, style)
     if "error" in result:
         raise HTTPException(status_code=404, detail=result["error"])
-    return result
+    
+    # Combine chapters into single continuous story with AI-generated transitions
+    chapters_dict = result["chapters"]
+    if not chapters_dict:
+        raise HTTPException(status_code=404, detail="No chapters found")
+    
+    # Create continuous story with smooth transitions
+    continuous_story = await narrative_engine.combine_chapters_with_transitions(chapters_dict, style)
+    
+    return {
+        "user_id": user_id,
+        "session_id": session_id,
+        "style": style,
+        "story": continuous_story
+    }
 
 
 @router.get("/{user_id}")

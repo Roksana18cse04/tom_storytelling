@@ -10,6 +10,12 @@ class Settings(BaseSettings):
     cloudinary_api_key: str
     cloudinary_api_secret: str
     mongo_url: str
+    
+    # AWS S3 Configuration
+    aws_access_key_id: str
+    aws_secret_access_key: str
+    aws_region: str
+    s3_bucket_name: str
 
     class Config:
         env_file= ".env"

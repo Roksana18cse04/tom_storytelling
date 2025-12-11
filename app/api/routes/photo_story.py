@@ -10,6 +10,7 @@ from app.services.memory_services_mongodb import mongo_memory_service as memory_
 from typing import Optional
 import logging
 from fastapi import UploadFile
+from bson import ObjectId
 
 logger = logging.getLogger(__name__)
 
@@ -37,13 +38,15 @@ async def photo_question(
             session_id = str(uuid.uuid4())
 
         # Save the uploaded image temporarily
-        filename = f"{uuid.uuid4()}_{image.filename}"
+        # Clean filename to remove extra dots
+        clean_filename = image.filename.rstrip('.')
+        filename = f"{uuid.uuid4()}_{clean_filename}"
         temp_file_path = os.path.join(IMAGE_DIR, filename)
         with open(temp_file_path, "wb") as f:
             shutil.copyfileobj(image.file, f)
 
-        # Upload to Cloudinary and get URL
-        cloudinary_url = photo_service.upload_to_cloudinary(temp_file_path, user_id)
+        # Upload to S3 and get URL
+        s3_url = photo_service.upload_to_s3(temp_file_path, user_id)
         
         # Analyze photo using LLM to get a storytelling question
         question = await photo_service.analyze_image(user_id, temp_file_path)
@@ -54,10 +57,10 @@ async def photo_question(
         except:
             pass
 
-        # Get user's current phase/category
+        # Get user's current phase/category (can be None for photo uploads)
         category = await memory_service.get_phase(user_id, session_id)
         if not category:
-            category = "early adulthood"  # Default if no phase set
+            category = "uncategorized"  # Temporary category until user answers
         
         # Save to MongoDB and get the generated memory_id
         memory_id = await memory_service.add_memory(
@@ -66,15 +69,16 @@ async def photo_question(
             category=category,
             question=question,
             response="",
-            photos=[cloudinary_url]
+            photos=[s3_url],
+            display_text=question  # Add display_text for last_question
         )
 
         return {
             "user_id": user_id,
             "session_id": session_id,
-            "memory_id": memory_id,  # ← Return this!
+            "memory_id": memory_id,
             "question": question,
-            "image_path": cloudinary_url
+            "image_path": s3_url
         }
 
     except Exception as e:
@@ -90,8 +94,10 @@ async def photo_answer(
     audio: Optional[UploadFile] = File(None)
 ):
     """
-    User answers the photo question via text or audio. AI generates a caption and updates the memory.
+    User answers the photo question. AI may generate follow-up questions (max 4).
     """
+    MAX_PHOTO_FOLLOWUPS = 4  # Structured follow-ups: Who/What → When/Where → Sensory → Emotional/Significance
+    
     try:
         # Handle audio transcription
         if audio:
@@ -102,14 +108,20 @@ async def photo_answer(
         else:
             raise HTTPException(status_code=400, detail="Either text or audio must be provided")
         
-        # Get the memory with the photo from all categories
+        # Get the memory with the photo
         session_data = await memory_service.get_user_memories(user_id, session_id)
+        
+        # Convert memory_id to ObjectId
+        try:
+            obj_id = ObjectId(memory_id)
+        except:
+            raise HTTPException(status_code=400, detail="Invalid memory_id format")
         
         target_memory = None
         old_category = None
         for category, memories in session_data.items():
             for mem in memories:
-                if mem["_id"] == memory_id:
+                if mem["_id"] == obj_id:
                     target_memory = mem
                     old_category = category
                     break
@@ -119,24 +131,129 @@ async def photo_answer(
         if not target_memory:
             raise HTTPException(status_code=404, detail="Photo memory not found")
         
-        # Detect life stage from user's answer
-        detected_category = memory_service.detect_initial_phase(answer)
-        if detected_category == "ASK_USER":
-            detected_category = old_category  # Fallback to current category
-        
-        # Generate caption from user's answer (pass Cloudinary URL)
         photo_url = target_memory.get("photos", [None])[0]
-        caption = await photo_service.generate_caption(answer, photo_url)
+        if photo_url:
+            photo_url = photo_url.rstrip('.')  # Clean trailing dots from URL
         
-        # Update the memory in MongoDB
+        # Update memory with answer
         from app.core.database import memories_collection
+        
+        # Get current response to build conversation history
+        current_response = target_memory.get("response", "")
+        if current_response:
+            updated_response = f"{current_response}\n\n{answer}"
+        else:
+            updated_response = answer
+        
         await memories_collection.update_one(
-            {"_id": memory_id},
+            {"_id": obj_id},
             {"$set": {
-                "response": answer,
-                "snippet": memory_service._generate_snippet(answer),
-                "photo_caption": caption,
-                "category": detected_category
+                "response": updated_response,
+                "snippet": memory_service._generate_snippet(updated_response)
+            }}
+        )
+
+        user_data = await memory_service.get_user_memories(user_id, session_id)
+
+        # Check for unanswered question
+        last_question = None
+        has_unanswered = False
+        if category in user_data and user_data[category]:
+            for mem in reversed(user_data[category]):
+                if mem["question"] and not mem["response"]:
+                    last_question = mem["question"]
+                    has_unanswered = True
+                    user_data[category].remove(mem)
+                    break
+        
+        # If returning user with unanswered question, remind them
+        if has_unanswered and text.lower().strip() in ["back", "continue", "previous"]:
+            return {
+                "last message": f"Welcome back! Your last question was: \"{last_question}\" but you didn't answer this. Please answer this question.",
+                "current_category": category,
+                "is_reminder": True
+            }
+        
+        # Fetch fresh memory to get updated followup_count from database
+        fresh_memory = await memories_collection.find_one({"_id": obj_id})
+        current_followup_count = fresh_memory.get("followup_count", 0) if fresh_memory else 0
+        existing_caption = fresh_memory.get("photo_caption", "") if fresh_memory else ""
+        
+        # Generate caption if it doesn't exist or is "Null" (retry logic)
+        # Only attempt on first answer for meaningful caption
+        if current_followup_count == 0:
+            if not existing_caption or existing_caption.strip().lower() in ["null", ""]:
+                caption = await photo_service.generate_caption(answer, photo_url)
+                await memories_collection.update_one(
+                    {"_id": obj_id},
+                    {"$set": {
+                        "photo_caption": caption,
+                        "followup_count": 0
+                    }}
+                )
+            else:
+                # Valid caption already exists, just set followup_count
+                await memories_collection.update_one(
+                    {"_id": obj_id},
+                    {"$set": {"followup_count": 0}}
+                )
+        
+        # Build conversation history for depth check
+        conversation_history = []
+        if target_memory.get("question"):
+            conversation_history.append({
+                "question": target_memory.get("question"),
+                "answer": updated_response
+            })
+        
+        needs_depth = photo_service._needs_depth_exploration(updated_response, conversation_history)
+        
+        if needs_depth and current_followup_count < MAX_PHOTO_FOLLOWUPS:
+            followup = await photo_service.generate_photo_followup(photo_url, conversation_history, answer, current_followup_count + 1)
+            
+            if followup:
+                # Detect category from current answer
+                detected_category = memory_service.detect_initial_phase(updated_response)
+                if detected_category == "ASK_USER":
+                    detected_category = old_category
+                
+                await memories_collection.update_one(
+                    {"_id": obj_id},
+                    {"$set": {
+                        "question": followup,
+                        "display_text": followup,
+                        "category": detected_category,
+                        "followup_count": current_followup_count + 1
+                    }}
+                )
+                
+                # Update user phase so current_category appears in memory map
+                await memory_service.set_phase(user_id, session_id, detected_category)
+                
+                return {
+                    "user_id": user_id,
+                    "session_id": session_id,
+                    "memory_id": memory_id,
+                    "response": followup,
+                    "current_category": detected_category,
+                    "followup_count": current_followup_count + 1,
+                    "has_followup": True
+                }
+        
+        # Finalize photo story
+        detected_category = memory_service.detect_initial_phase(updated_response)
+        if detected_category == "ASK_USER":
+            detected_category = old_category
+        
+        # Fetch fresh caption from database (generated after first answer)
+        fresh_memory = await memories_collection.find_one({"_id": obj_id})
+        existing_caption = fresh_memory.get("photo_caption", "") if fresh_memory else ""
+        
+        await memories_collection.update_one(
+            {"_id": obj_id},
+            {"$set": {
+                "category": detected_category,
+                "photo_complete": True
             }}
         )
         
@@ -144,11 +261,12 @@ async def photo_answer(
             "user_id": user_id,
             "session_id": session_id,
             "memory_id": memory_id,
-            "answer": answer,
-            "caption": caption,
+            "answer": updated_response,
+            "caption": existing_caption,
             "category": detected_category,
             "moved_from": old_category if detected_category != old_category else None,
-            "message": "Photo story saved with caption"
+            "photo_complete": True,
+            "message": "Photo story completed"
         }
     
     except HTTPException:
