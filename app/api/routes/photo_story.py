@@ -174,9 +174,29 @@ async def photo_answer(
                 "is_reminder": True
             }
         
-        # Count follow-ups by parsing response history
-        response_parts = updated_response.split("\n\n")
-        followup_count = len(response_parts) - 1  # First part is initial answer
+        # Fetch fresh memory to get updated followup_count from database
+        fresh_memory = await memories_collection.find_one({"_id": obj_id})
+        current_followup_count = fresh_memory.get("followup_count", 0) if fresh_memory else 0
+        existing_caption = fresh_memory.get("photo_caption", "") if fresh_memory else ""
+        
+        # Generate caption if it doesn't exist or is "Null" (retry logic)
+        # Only attempt on first answer for meaningful caption
+        if current_followup_count == 0:
+            if not existing_caption or existing_caption.strip().lower() in ["null", ""]:
+                caption = await photo_service.generate_caption(answer, photo_url)
+                await memories_collection.update_one(
+                    {"_id": obj_id},
+                    {"$set": {
+                        "photo_caption": caption,
+                        "followup_count": 0
+                    }}
+                )
+            else:
+                # Valid caption already exists, just set followup_count
+                await memories_collection.update_one(
+                    {"_id": obj_id},
+                    {"$set": {"followup_count": 0}}
+                )
         
         # Build conversation history for depth check
         conversation_history = []
@@ -188,8 +208,8 @@ async def photo_answer(
         
         needs_depth = photo_service._needs_depth_exploration(updated_response, conversation_history)
         
-        if needs_depth and followup_count < MAX_PHOTO_FOLLOWUPS:
-            followup = await photo_service.generate_photo_followup(photo_url, conversation_history, answer, followup_count + 1)
+        if needs_depth and current_followup_count < MAX_PHOTO_FOLLOWUPS:
+            followup = await photo_service.generate_photo_followup(photo_url, conversation_history, answer, current_followup_count + 1)
             
             if followup:
                 # Detect category from current answer
@@ -202,7 +222,8 @@ async def photo_answer(
                     {"$set": {
                         "question": followup,
                         "display_text": followup,
-                        "category": detected_category
+                        "category": detected_category,
+                        "followup_count": current_followup_count + 1
                     }}
                 )
                 
@@ -215,7 +236,7 @@ async def photo_answer(
                     "memory_id": memory_id,
                     "response": followup,
                     "current_category": detected_category,
-                    "followup_count": followup_count + 1,
+                    "followup_count": current_followup_count + 1,
                     "has_followup": True
                 }
         
@@ -224,12 +245,13 @@ async def photo_answer(
         if detected_category == "ASK_USER":
             detected_category = old_category
         
-        caption = await photo_service.generate_caption(updated_response, photo_url)
+        # Fetch fresh caption from database (generated after first answer)
+        fresh_memory = await memories_collection.find_one({"_id": obj_id})
+        existing_caption = fresh_memory.get("photo_caption", "") if fresh_memory else ""
         
         await memories_collection.update_one(
             {"_id": obj_id},
             {"$set": {
-                "photo_caption": caption,
                 "category": detected_category,
                 "photo_complete": True
             }}
@@ -240,7 +262,7 @@ async def photo_answer(
             "session_id": session_id,
             "memory_id": memory_id,
             "answer": updated_response,
-            "caption": caption,
+            "caption": existing_caption,
             "category": detected_category,
             "moved_from": old_category if detected_category != old_category else None,
             "photo_complete": True,

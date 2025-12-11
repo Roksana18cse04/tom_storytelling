@@ -69,11 +69,25 @@ async def generate_full_story(
     session_id: str,
     style: str = Query("conversational", description="Style: conversational, literary, formal, reflective, light_hearted or concise")
 ):
-    """Generate complete life story with all chapters."""
+    """Generate complete life story as single continuous narrative with smooth transitions."""
     result = await narrative_engine.generate_full_story(user_id, session_id, style)
     if "error" in result:
         raise HTTPException(status_code=404, detail=result["error"])
-    return result
+    
+    # Combine chapters into single continuous story with AI-generated transitions
+    chapters_dict = result["chapters"]
+    if not chapters_dict:
+        raise HTTPException(status_code=404, detail="No chapters found")
+    
+    # Create continuous story with smooth transitions
+    continuous_story = await narrative_engine.combine_chapters_with_transitions(chapters_dict, style)
+    
+    return {
+        "user_id": user_id,
+        "session_id": session_id,
+        "style": style,
+        "story": continuous_story
+    }
 
 
 @router.get("/{user_id}")

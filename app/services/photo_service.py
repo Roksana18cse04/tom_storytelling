@@ -250,9 +250,44 @@ Generate ONE warm, specific follow-up question based on their ANSWERS (not the p
 
     async def generate_caption(self, user_story: str, image_url: str = None) -> str:
         """
-        Return Null - no caption generation.
+        Generate a short, meaningful caption from user's story.
         """
-        return "Null"
+        try:
+            response = await client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"""Generate a SHORT photo caption (max 10-15 words) from this story.
+
+Story: "{user_story}"
+
+Caption should:
+- Capture the essence of the moment
+- Be concise and meaningful
+- Use user's own words/phrases when possible
+- NO quotes around the caption
+
+Example captions:
+- "University days with my best friend"
+- "Early career teamwork during a challenging project"
+- "Family gathering at grandmother's house"
+- "Weekend adventure with close friends"
+
+Generate caption:"""
+                    }
+                ],
+                temperature=0.7
+            )
+            
+            caption = response.choices[0].message.content.strip()
+            # Remove quotes if AI adds them
+            caption = caption.strip('"').strip("'")
+            return caption
+            
+        except Exception:
+            logger.exception("Failed to generate caption")
+            return "Memorable moment"  # Fallback instead of "Null"
     
     def _needs_depth_exploration(self, text: str, conversation_history: list = None) -> bool:
         """Check if response has enough detail or needs follow-up based on missing context."""
