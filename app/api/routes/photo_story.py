@@ -198,7 +198,7 @@ async def photo_answer(
                     {"$set": {"followup_count": 0}}
                 )
         
-        # Build conversation history for depth check
+        # Build conversation history
         conversation_history = []
         if target_memory.get("question"):
             conversation_history.append({
@@ -206,9 +206,8 @@ async def photo_answer(
                 "answer": updated_response
             })
         
-        needs_depth = photo_service._needs_depth_exploration(updated_response, conversation_history)
-        
-        if needs_depth and current_followup_count < MAX_PHOTO_FOLLOWUPS:
+        # ALWAYS generate exactly 4 followups (no needs_depth check)
+        if current_followup_count < MAX_PHOTO_FOLLOWUPS:
             followup = await photo_service.generate_photo_followup(photo_url, conversation_history, answer, current_followup_count + 1)
             
             if followup:
@@ -217,15 +216,33 @@ async def photo_answer(
                 if detected_category == "ASK_USER":
                     detected_category = old_category
                 
-                await memories_collection.update_one(
-                    {"_id": obj_id},
-                    {"$set": {
-                        "question": followup,
-                        "display_text": followup,
-                        "category": detected_category,
-                        "followup_count": current_followup_count + 1
-                    }}
-                )
+                # Increment followup count
+                new_followup_count = current_followup_count + 1
+                
+                # Check if this is the 4th (final) followup
+                if new_followup_count >= MAX_PHOTO_FOLLOWUPS:
+                    # Mark as complete after 4th followup
+                    await memories_collection.update_one(
+                        {"_id": obj_id},
+                        {"$set": {
+                            "question": followup,
+                            "display_text": followup,
+                            "category": detected_category,
+                            "followup_count": new_followup_count,
+                            "photo_complete": True
+                        }}
+                    )
+                else:
+                    # Not final followup yet
+                    await memories_collection.update_one(
+                        {"_id": obj_id},
+                        {"$set": {
+                            "question": followup,
+                            "display_text": followup,
+                            "category": detected_category,
+                            "followup_count": new_followup_count
+                        }}
+                    )
                 
                 # Update user phase so current_category appears in memory map
                 await memory_service.set_phase(user_id, session_id, detected_category)
@@ -236,8 +253,9 @@ async def photo_answer(
                     "memory_id": memory_id,
                     "response": followup,
                     "current_category": detected_category,
-                    "followup_count": current_followup_count + 1,
-                    "has_followup": True
+                    "followup_count": new_followup_count,
+                    "has_followup": True,
+                    "photo_complete": new_followup_count >= MAX_PHOTO_FOLLOWUPS
                 }
         
         # Finalize photo story
