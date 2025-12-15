@@ -170,7 +170,7 @@ async def photo_answer(
         if has_unanswered and text.lower().strip() in ["back", "continue", "previous"]:
             return {
                 "last message": f"Welcome back! Your last question was: \"{last_question}\" but you didn't answer this. Please answer this question.",
-                "current_category": category,
+                "current_category": category,   
                 "is_reminder": True
             }
         
@@ -206,7 +206,7 @@ async def photo_answer(
                 "answer": updated_response
             })
         
-        # ALWAYS generate exactly 4 followups (no needs_depth check)
+        
         if current_followup_count < MAX_PHOTO_FOLLOWUPS:
             followup = await photo_service.generate_photo_followup(photo_url, conversation_history, answer, current_followup_count + 1)
             
