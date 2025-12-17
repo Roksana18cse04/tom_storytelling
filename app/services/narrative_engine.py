@@ -372,7 +372,7 @@ NOW WRITE THE CHAPTER:
             return {"error": str(e)}
 
     async def combine_chapters_with_transitions(self, chapters_dict: dict, style: str = "conversational") -> str:
-        """Combine separate chapters into one continuous story with smooth transitions."""
+        """Combine separate chapters into one continuous story with phase headers and smooth transitions."""
         if not chapters_dict:
             return "No story content available."
         
@@ -387,32 +387,85 @@ NOW WRITE THE CHAPTER:
         model = style_cfg["model"]
         temperature = style_cfg["temperature"]
         
-        # AI prompt to combine with transitions
+        # AI prompt to combine with transitions and phase headers
         prompt = f"""
-You have separate life phase chapters. Combine them into ONE continuous flowing story.
+🚨 MANDATORY FORMATTING RULES - FAILURE TO FOLLOW = REJECTION 🚨
+
+You have separate life phase chapters. Combine them into ONE continuous flowing story with phase headers.
 
 Style: {self.styles.get(style, self.styles['conversational'])}
 
-CRITICAL RULES:
-1. Create smooth transitions between life phases
-2. Maintain chronological order
-3. Keep the EXACT content from each chapter - DO NOT change facts or details
-4. Add natural connecting sentences between phases (e.g., "As I grew older...", "Those years led me to...")
-5. Remove chapter headings - make it ONE continuous narrative
-6. Maintain consistent {style} style throughout
-7. DO NOT add new information - only rearrange and connect existing content
-8. PRESERVE ALL PHOTO PLACEHOLDERS - Keep format: [Image: path][Caption: "text"] exactly as provided
+🔴 ABSOLUTE REQUIREMENTS (NO EXCEPTIONS):
+
+1. PHASE HEADERS: Start each phase with name as header ("Childhood:", "Teenage Years:", "Early Adulthood:")
+
+2. PARAGRAPH LENGTH LIMIT: 
+   ⚠️ MAXIMUM 3 LINES PER PARAGRAPH
+   ⚠️ After 3 lines, you MUST start new paragraph
+   ⚠️ Each distinct memory/idea = separate paragraph
+
+3. SENTENCE LENGTH LIMIT:
+   ⚠️ MAXIMUM 20 words per sentence
+   ⚠️ If sentence has 3+ clauses, SPLIT into multiple sentences
+   ⚠️ Mix: 50% short (5-10 words), 50% medium (11-20 words)
+
+4. BANNED REPETITIVE WORDS (DO NOT REPEAT):
+   🚫 "sunlight filtering/streaming" - use ONCE only
+   🚫 "quiet hum" - use ONCE only  
+   🚫 "smell of..." pattern - use ONCE only
+   🚫 "faint scent/aroma" - use ONCE only
+   🚫 If you used a sensory word, find DIFFERENT imagery next time
+
+5. SPECIFIC TRANSITIONS (NOT GENERIC):
+   ✅ Reference actual previous content: "The curiosity of childhood evolved into teenage self-discovery"
+   ❌ Generic phrases: "As years passed", "Time moved on"
+
+6. MANDATORY REFLECTION:
+   ⚠️ EVERY phase MUST end with reflection paragraph about lessons learned
+
+7. PRESERVE EXACT CONTENT:
+   ⚠️ Keep ALL facts, details, photo placeholders [Image: path][Caption: "text"]
+   ⚠️ Only rearrange and break into shorter paragraphs
+
+8. SENTENCE FLOW (AVOID CHOPPY LISTS):
+   ⚠️ Link related sentences with "and", "while", "as" instead of choppy periods
+   ❌ WRONG: "I was in charge of my schedule, finances, and routines. Excitement and apprehension filled those early days."
+   ✅ CORRECT: "I was in charge of my schedule, finances, and routines, and excitement and apprehension filled those early days."
+
+9. PERSONAL REFLECTIONS:
+   ⚠️ End each phase with personal, conversational reflection using "I", "who I am", "how I approach"
+   ❌ WRONG: "These experiences continue to shape my journey."
+   ✅ CORRECT: "These experiences continue to shape who I am and how I approach life today."
+
+10. SENSORY UNIQUENESS PER PHASE:
+    ⚠️ Each phase gets ONE unique sensory focus - do NOT repeat sensory types across phases
+    ✅ Childhood: sounds (laughter, bells, voices)
+    ✅ Teenage: visual (light, patterns, colors)
+    ✅ Early Adulthood: smells (coffee, food, cleaning)
+    🚫 Do NOT use same sensory type in multiple phases
+
+🔥 ENFORCEMENT EXAMPLE:
+
+❌ WRONG (Too long, repetitive):
+"I was born in a small town in the late 1990s, a quiet place surrounded by narrow streets, familiar faces, and a strong sense of community. My early years were shaped by simple routines—playing outside with neighborhood friends, listening to elders' stories, and watching life move at a slower, more predictable pace."
+
+✅ CORRECT (Short paragraphs, varied sentences):
+"I was born in a small town in the late 1990s. It was quiet, with narrow streets and familiar faces.
+
+My early years followed simple routines. I played outside with neighborhood friends. We listened to elders' stories and watched life move slowly.
+
+Those experiences shaped my sense of community. The warmth created lasting bonds."
 
 Chapters to combine:
 {chapters_text}
 
-Now write ONE continuous story with smooth transitions:
+🚨 WRITE NOW - FOLLOW ALL RULES EXACTLY:
 """
         
         response = await client.chat.completions.create(
             model=model,
             messages=[
-                {"role": "system", "content": f"You are a professional biographer combining life chapters into a continuous narrative. Maintain {style} style and add only transitional phrases."},
+                {"role": "system", "content": f"You are a professional biographer combining life chapters with clear phase headers and smooth transitions. Maintain {style} style."},
                 {"role": "user", "content": prompt}
             ],
             temperature=temperature

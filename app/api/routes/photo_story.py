@@ -33,25 +33,19 @@ async def photo_question(
         raise HTTPException(status_code=400, detail="No image file provided.")
 
     try:
-        # Use provided session_id or generate a new one
         if not session_id:
             session_id = str(uuid.uuid4())
 
-        # Save the uploaded image temporarily
-        # Clean filename to remove extra dots
         clean_filename = image.filename.rstrip('.')
         filename = f"{uuid.uuid4()}_{clean_filename}"
         temp_file_path = os.path.join(IMAGE_DIR, filename)
         with open(temp_file_path, "wb") as f:
             shutil.copyfileobj(image.file, f)
 
-        # Upload to S3 and get URL
         s3_url = photo_service.upload_to_s3(temp_file_path, user_id)
         
-        # Analyze photo using LLM to get a storytelling question
         question = await photo_service.analyze_image(user_id, temp_file_path)
         
-        # Delete temporary local file after upload
         try:
             os.remove(temp_file_path)
         except:
@@ -206,7 +200,7 @@ async def photo_answer(
                 "answer": updated_response
             })
         
-        
+
         if current_followup_count < MAX_PHOTO_FOLLOWUPS:
             followup = await photo_service.generate_photo_followup(photo_url, conversation_history, answer, current_followup_count + 1)
             
