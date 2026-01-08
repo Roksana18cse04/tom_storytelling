@@ -3,6 +3,7 @@
 from fastapi import APIRouter, HTTPException, Query
 from app.services.narrative_engine import narrative_engine
 from app.core.database import story_collection
+from app.services.story_cache import get_or_generate_chapter
 import datetime
 
 router = APIRouter()
@@ -16,50 +17,35 @@ async def generate_chapter(
 ):
     """Generate a narrative chapter for a specific category."""
     category = category.lower()
-    
-    # Check if story already exists in database
-    existing_story = await story_collection.find_one({
-        "user_id": user_id,
-        "session_id": session_id,
-        "category": category,
-        "style": style
-    })
-    
-    # If exists, return from database (cached)
-    if existing_story:
-        return {
-            "_id": str(existing_story['_id']),
+
+    chapter, from_cache, _source_fingerprint = await get_or_generate_chapter(
+        user_id=user_id,
+        session_id=session_id,
+        category=category,
+        style=style,
+    )
+
+    if chapter.startswith("No ") or chapter.startswith("Error"):
+        raise HTTPException(status_code=404, detail=chapter)
+
+    # Fetch the stored doc to return _id consistently.
+    stored = await story_collection.find_one(
+        {
             "user_id": user_id,
             "session_id": session_id,
             "category": category,
             "style": style,
-            "chapter": existing_story["chapter"],
-            "from_cache": True
         }
-    
-    # Generate new story
-    chapter = await narrative_engine.generate_chapter(user_id, session_id, category, style)
-    if chapter.startswith("No ") or chapter.startswith("Error"):
-        raise HTTPException(status_code=404, detail=chapter)
-    
-    # Save generated story to database and get inserted ID
-    result = await story_collection.insert_one({
-        "user_id": user_id,
-        "session_id": session_id,
-        "category": category,
-        "chapter": chapter,
-        "style": style,
-        "timestamp": datetime.datetime.now().isoformat()
-    })
-    
+    )
+
     return {
-        "_id": str(result.inserted_id),
+        "_id": str(stored["_id"]) if stored and stored.get("_id") else None,
         "user_id": user_id,
         "session_id": session_id,
         "category": category,
         "style": style,
         "chapter": chapter,
-        "from_cache": False
+        "from_cache": from_cache
     }
 
 

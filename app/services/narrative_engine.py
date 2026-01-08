@@ -96,7 +96,20 @@ class NarrativeEngine:
     def _get_system_message(self, style: str) -> str:
         """Get style-specific system message"""
         messages = {
-            "conversational": "You are a biographer. ABSOLUTE RULE: Copy user's EXACT words. DO NOT add ANY descriptive words. BANNED: lush, dotted, scattered, nestled, surrounded, woven, vibrant, amid, narrow, winding, thatched. You may ONLY remove Q&A format and add: 'and', 'then', 'so'. If you add even ONE word user didn't say, you FAIL.",
+            "conversational": (
+                "You are a biographer writing in a simple conversational voice. ABSOLUTE RULE: Copy the "
+                "user's EXACT words. DO NOT add poetic images, lessons, advice, or polished phrasing."
+                " BANNED WORDS/PHRASES: lush, dotted, scattered, nestled, surrounded, woven, vibrant,"
+                " amid, narrow, winding, thatched, symphony, tapestry, embrace, perfume, kissed,"
+                " 'sunlight would spill', 'stretch time itself', 'town itself was breathing gently',"
+                " 'wrapped in heat, routine', 'feels like a foundation', 'shaping who I would become',"
+                " 'taught me the value of patience', 'continues to shape how I understand home',"
+                " 'gently shaping who I would become', 'taught me patience'."
+                " You may ONLY remove Q&A format and add tiny connectors ('and', 'then', 'so', 'but')."
+                " Keep sentences short and casual ('Ami late 90s-e janmi', 'Bikel bela amra kheltaam'),"
+                " and NEVER add reflections, morals, wisdom, or atmosphere the user did not say."
+                " If any banned tone appears, FAIL the response."
+            ),
             "literary": "You are a literary biographer. CRITICAL RULE: You may ONLY rearrange user's EXACT words. DO NOT add ANY new words except: 'and', 'then', 'but', 'as', 'when', 'where'. BANNED: nestled, dotted, scattered, lush, vibrant, symphony, tapestry, embrace. If you add ANY banned word or ANY adjective/verb user didn't say, you FAIL. Use ONLY user's words in better order.",
             "formal": "You are a professional biographer. CRITICAL: Present user's information factually with clear structure. Use third-person (The subject, He/She) or neutral tone. No embellishment. Preserve exact facts stated.",
             "reflective": "You are a thoughtful biographer. CRITICAL: Use user's own reflections and emotions. Add introspective pacing and time perspective shifts (e.g., 'Looking back...'), but never invent feelings or insights they didn't express. Use ONLY their words.",
@@ -167,28 +180,31 @@ Q&A:
             return core_rules + """
 📝 STYLE: Conversational (Spoken Storytelling)
 
-⚠️ CRITICAL: Keep it SIMPLE and NATURAL - like the user is talking to family!
+⚠️ CRITICAL: Keep it SIMPLE and NATURAL - like you are chatting with family.
 
-🚫 BANNED WORDS (DO NOT USE):
+🚫 BANNED WORDS/PHRASES (DO NOT USE):
 - lush, dotted, scattered, nestled, woven, vibrant, amid, throughout, surrounded
 - narrow, winding, thatched, embrace, tapestry, symphony, perfume, kissed
 - painted, adorned, graced, vast, distant, soft, gentle, faint
-- ANY adjective or verb user didn't explicitly say
+- 'sunlight would spill', 'stretch time itself', 'town itself was breathing gently', 'wrapped in heat, routine'
+- 'feels like a foundation', 'shaping who I would become', 'taught me the value of patience', 'continues to shape how I understand home', 'gently shaping who I would become'
+- ANY adjective, verb, reflection, or life lesson the user did not explicitly say
 
 ✅ INSTRUCTIONS:
-1. USE SHORT SENTENCES. (Avoid long run-on sentences with "and").
-2. PREFER FULL STOPS (.) over connectors.
-3. You can add: "and", "then", "so", "but" - BUT USE SPARINGLY!
+1. USE SHORT, CASUAL SENTENCES. Avoid run-ons. Think: "Ami late 90s-e janmi." "Bikel bela amra kheltaam."
+2. PREFER FULL STOPS (.) over connectors; if needed, only add "and", "then", "so", "but".
+3. NO POETIC ATMOSPHERE, NO ADDED REFLECTIONS/LESSONS. Only the plain facts the user spoke.
 4. EVERYTHING ELSE = user's EXACT words.
 
-⚠️ CRITICAL: If user said "green fields" → write "green fields" (NOT "surrounded by green fields")
+⚠️ CRITICAL: If the user said "green fields" → write "green fields" (NOT "surrounded by green fields").
 
 HOW TO WRITE:
-- First-person, warm, personal tone
+- First-person, warm, personal tone.
 - Break long thoughts into smaller chunks.
-- Use ONLY user's exact words - don't make them "prettier"
+- Do not add lessons, wisdom, or atmosphere unless the user literally said them.
+- Keep description minimal; only basic context.
 
-EXAMPLE 1:
+EXAMPLE:
 User said: "I was born in a village. It had green fields. We lived in mud houses."
 
 ✅ CORRECT: "I was born in a village. It had green fields. We lived in mud houses."
@@ -387,8 +403,47 @@ NOW WRITE THE CHAPTER:
         model = style_cfg["model"]
         temperature = style_cfg["temperature"]
         
-        # AI prompt to combine with transitions and phase headers
-        prompt = f"""
+                # AI prompt to combine with transitions and phase headers
+        if style == "conversational":
+            prompt = f"""
+🚨 CONVERSATIONAL MERGE RULES 🚨
+
+You have separate life phase chapters. Combine them into ONE complete flowing story.
+
+Style: conversational (casual, spoken). NO poetic lines, NO added lessons, NO flowery transitions.
+
+🔴 CRITICAL REQUIREMENTS:
+
+1) DO NOT SHORTEN OR CONDENSE THE CHAPTERS
+   - Keep EVERY sentence from the original chapters
+   - Keep EVERY detail, fact, and story element
+   - The full story should be AS LONG OR LONGER than the sum of individual chapters
+   - Only ADD phase headers and simple transitions
+
+2) Phase headers: "Childhood:", "Teenage Years:", "Early Adulthood:" (or use provided category titles).
+
+3) Transitions between phases: Keep plain and minimal (1-2 sentences max).
+   - Examples: "Then I...", "After that...", "Later..."
+   - Avoid fancy phrasing.
+
+4) Preserve ALL content exactly:
+   - ALL facts and photo placeholders: [Image: path][Caption: "text"]
+   - ALL sentences from original chapters
+   - ALL details and stories
+
+5) BANNED phrases: 'sunlight would spill', 'stretch time itself', 'town itself was breathing gently', 'wrapped in heat, routine', 'feels like a foundation', 'shaping who I would become', 'taught me the value of patience', 'continues to shape how I understand home', and any flowery/advice wording.
+
+6) Do NOT add reflections/wisdom unless the user literally said them.
+
+7) Keep tone casual (examples: "Ami late 90s-e janmi." "Bikel bela amra kheltaam.").
+
+Chapters to combine:
+{chapters_text}
+
+Write the complete merged story now. Include ALL content from every chapter.
+"""
+        else:
+            prompt = f"""
 🚨 MANDATORY FORMATTING RULES - FAILURE TO FOLLOW = REJECTION 🚨
 
 You have separate life phase chapters. Combine them into ONE continuous flowing story with phase headers.
@@ -397,52 +452,64 @@ Style: {self.styles.get(style, self.styles['conversational'])}
 
 🔴 ABSOLUTE REQUIREMENTS (NO EXCEPTIONS):
 
-1. PHASE HEADERS: Start each phase with name as header ("Childhood:", "Teenage Years:", "Early Adulthood:")
+1. DO NOT SHORTEN OR CONDENSE THE CHAPTERS:
+    ⚠️ Keep EVERY sentence from the original chapters
+    ⚠️ Keep EVERY detail, fact, and story element
+    ⚠️ The full story should be AS LONG OR LONGER than the sum of individual chapters
+    ⚠️ Only ADD phase headers and transitions
 
-2. PARAGRAPH LENGTH LIMIT: 
-   ⚠️ MAXIMUM 3 LINES PER PARAGRAPH
-   ⚠️ After 3 lines, you MUST start new paragraph
-   ⚠️ Each distinct memory/idea = separate paragraph
+2. PHASE HEADERS: Start each phase with name as header ("Childhood:", "Teenage Years:", "Early Adulthood:")
 
-3. SENTENCE LENGTH LIMIT:
-   ⚠️ MAXIMUM 20 words per sentence
-   ⚠️ If sentence has 3+ clauses, SPLIT into multiple sentences
-   ⚠️ Mix: 50% short (5-10 words), 50% medium (11-20 words)
+3. PARAGRAPH LENGTH LIMIT: 
+    ⚠️ MAXIMUM 3 LINES PER PARAGRAPH
+    ⚠️ After 3 lines, you MUST start new paragraph
+    ⚠️ Each distinct memory/idea = separate paragraph
 
-4. BANNED REPETITIVE WORDS (DO NOT REPEAT):
-   🚫 "sunlight filtering/streaming" - use ONCE only
-   🚫 "quiet hum" - use ONCE only  
-   🚫 "smell of..." pattern - use ONCE only
-   🚫 "faint scent/aroma" - use ONCE only
-   🚫 If you used a sensory word, find DIFFERENT imagery next time
+4. SENTENCE LENGTH LIMIT:
+    ⚠️ MAXIMUM 20 words per sentence
+    ⚠️ If sentence has 3+ clauses, SPLIT into multiple sentences
+    ⚠️ Mix: 50% short (5-10 words), 50% medium (11-20 words)
 
-5. SPECIFIC TRANSITIONS (NOT GENERIC):
-   ✅ Reference actual previous content: "The curiosity of childhood evolved into teenage self-discovery"
-   ❌ Generic phrases: "As years passed", "Time moved on"
+5. BANNED REPETITIVE WORDS (DO NOT REPEAT):
+    🚫 "sunlight filtering/streaming" - use ONCE only
+    🚫 "quiet hum" - use ONCE only  
+    🚫 "smell of..." pattern - use ONCE only
+    🚫 "faint scent/aroma" - use ONCE only
+    🚫 If you used a sensory word, find DIFFERENT imagery next time
 
-6. MANDATORY REFLECTION:
-   ⚠️ EVERY phase MUST end with reflection paragraph about lessons learned
+6. SPECIFIC TRANSITIONS (NOT GENERIC):
+    ✅ Reference actual previous content: "The curiosity of childhood evolved into teenage self-discovery"
+    ❌ Generic phrases: "As years passed", "Time moved on"
 
-7. PRESERVE EXACT CONTENT:
-   ⚠️ Keep ALL facts, details, photo placeholders [Image: path][Caption: "text"]
-   ⚠️ Only rearrange and break into shorter paragraphs
+7. MANDATORY REFLECTION:
+    ⚠️ EVERY phase MUST end with reflection paragraph about lessons learned
+
+8. PRESERVE EXACT CONTENT:
+    ⚠️ Keep ALL facts, details, photo placeholders [Image: path][Caption: "text"]
+    ⚠️ Keep ALL sentences and paragraphs from original chapters
+    ⚠️ Only break long paragraphs into shorter ones (not remove content)
 
 8. SENTENCE FLOW (AVOID CHOPPY LISTS):
-   ⚠️ Link related sentences with "and", "while", "as" instead of choppy periods
-   ❌ WRONG: "I was in charge of my schedule, finances, and routines. Excitement and apprehension filled those early days."
-   ✅ CORRECT: "I was in charge of my schedule, finances, and routines, and excitement and apprehension filled those early days."
+    ⚠️ Link related sentences with "and", "while", "as" instead of choppy periods
+    ❌ WRONG: "I was in charge of my schedule, finances, and routines. Excitement and apprehension filled those early days."
+    ✅ CORRECT: "I was in charge of my schedule, finances, and routines, and excitement and apprehension filled those early days."
 
 9. PERSONAL REFLECTIONS:
-   ⚠️ End each phase with personal, conversational reflection using "I", "who I am", "how I approach"
-   ❌ WRONG: "These experiences continue to shape my journey."
-   ✅ CORRECT: "These experiences continue to shape who I am and how I approach life today."
+    ⚠️ End each phase with personal, conversational reflection using "I", "who I am", "how I approach"
+    ❌ WRONG: "These experiences continue to shape my journey."
+    ✅ CORRECT: "These experiences continue to shape who I am and how I approach life today."
 
 10. SENSORY UNIQUENESS PER PHASE:
-    ⚠️ Each phase gets ONE unique sensory focus - do NOT repeat sensory types across phases
-    ✅ Childhood: sounds (laughter, bells, voices)
-    ✅ Teenage: visual (light, patterns, colors)
-    ✅ Early Adulthood: smells (coffee, food, cleaning)
-    🚫 Do NOT use same sensory type in multiple phases
+     ⚠️ Each phase gets ONE unique sensory focus - do NOT repeat sensory types across phases
+     ✅ Childhood: sounds (laughter, bells, voices)
+     ✅ Teenage: visual (light, patterns, colors)
+     ✅ Early Adulthood: smells (coffee, food, cleaning)
+     🚫 Do NOT use same sensory type in multiple phases
+
+11. CONTENT PRESERVATION:
+     ⚠️ The final story MUST contain ALL content from every chapter
+     ⚠️ Do NOT summarize or condense chapters
+     ⚠️ Only ADD headers and transitions, NEVER remove content
 
 🔥 ENFORCEMENT EXAMPLE:
 
@@ -462,10 +529,16 @@ Chapters to combine:
 🚨 WRITE NOW - FOLLOW ALL RULES EXACTLY:
 """
         
+        system_prompt = (
+            "You are a casual storyteller combining life chapters with clear headers and plain transitions. Keep everything simple and spoken."
+            if style == "conversational"
+            else f"You are a professional biographer combining life chapters with clear phase headers and smooth transitions. Maintain {style} style."
+        )
+
         response = await client.chat.completions.create(
             model=model,
             messages=[
-                {"role": "system", "content": f"You are a professional biographer combining life chapters with clear phase headers and smooth transitions. Maintain {style} style."},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt}
             ],
             temperature=temperature
