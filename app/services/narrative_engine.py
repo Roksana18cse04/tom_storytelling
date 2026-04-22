@@ -1,6 +1,7 @@
 from app.services.memory_services_mongodb import mongo_memory_service as memory_service
 from openai import AsyncOpenAI
 from app.core.config import settings
+import re
 
 client = AsyncOpenAI(api_key=settings.openai_api_key)
 
@@ -35,6 +36,17 @@ class NarrativeEngine:
             "light_hearted": "playful and upbeat — highlights humour, mischief, and joyful moments",
             "concise": "streamlined and factual — focuses on clarity and chronology over description"
 }
+
+    def _extract_first_name(self, user_id: str) -> str:
+        """Best-effort first-name extraction from account identifier."""
+        if not user_id:
+            return "The person"
+
+        token = re.split(r"[^A-Za-z]+", user_id.strip())[0]
+        if not token:
+            return "The person"
+
+        return token.capitalize()
 
     async def generate_chapter(self, user_id: str, session_id: str, category: str, style: str = "conversational") -> str:
         """Generate a narrative chapter for a specific category with strict authenticity."""
@@ -72,12 +84,19 @@ class NarrativeEngine:
             style_cfg = self.style_config.get(style, self.style_config["conversational"])
             model = style_cfg["model"]
             temperature = style_cfg["temperature"]
+            preferred_name = self._extract_first_name(user_id) if style == "formal" else None
             
             # Get style-specific prompt
-            prompt = self._get_style_prompt(style, chapter_title, qa_text, photo_section)
+            prompt = self._get_style_prompt(
+                style,
+                chapter_title,
+                qa_text,
+                photo_section,
+                preferred_name=preferred_name,
+            )
 
             # Get style-specific system message
-            system_message = self._get_system_message(style)
+            system_message = self._get_system_message(style, preferred_name=preferred_name)
             
             response = await client.chat.completions.create(
                 model=model,
@@ -93,8 +112,9 @@ class NarrativeEngine:
         except Exception as e:
             return f"Error: {str(e)}"
 
-    def _get_system_message(self, style: str) -> str:
+    def _get_system_message(self, style: str, preferred_name: str | None = None) -> str:
         """Get style-specific system message"""
+        subject_name = preferred_name or "The person"
         messages = {
             "conversational": (
                 "You are a biographer writing in a simple conversational voice. ABSOLUTE RULE: Copy the "
@@ -111,18 +131,30 @@ class NarrativeEngine:
                 " If any banned tone appears, FAIL the response."
             ),
             "literary": "You are a literary biographer. CRITICAL RULE: You may ONLY rearrange user's EXACT words. DO NOT add ANY new words except: 'and', 'then', 'but', 'as', 'when', 'where'. BANNED: nestled, dotted, scattered, lush, vibrant, symphony, tapestry, embrace. If you add ANY banned word or ANY adjective/verb user didn't say, you FAIL. Use ONLY user's words in better order.",
-            "formal": "You are a professional biographer. CRITICAL: Present user's information factually with clear structure. Use third-person (The subject, He/She) or neutral tone. No embellishment. Preserve exact facts stated.",
+            "formal": (
+                f"You are a professional biographer. CRITICAL: Present user's information factually with clear "
+                f"structure. Use third-person with {subject_name} as the primary reference (and He/She when "
+                f"needed). Never use the phrase 'The subject'. No embellishment. Preserve exact facts stated."
+            ),
             "reflective": "You are a thoughtful biographer. CRITICAL: Use user's own reflections and emotions. Add introspective pacing and time perspective shifts (e.g., 'Looking back...'), but never invent feelings or insights they didn't express. Use ONLY their words.",
             "light_hearted": "You are a warm storyteller. CRITICAL: Emphasize user's humor and joy using their own words. Keep playful tone but never exaggerate beyond their natural expression. Use ONLY what they said.",
             "concise": "You are a biographer creating brief narratives. CRITICAL: Use user's exact words in shortest form. Remove all unnecessary adjectives. Focus on key facts only. 50% shorter than original."
         }
         return messages.get(style, messages["conversational"])
     
-    def _get_style_prompt(self, style: str, chapter_title: str, qa_text: str, photo_section: str) -> str:
+    def _get_style_prompt(
+        self,
+        style: str,
+        chapter_title: str,
+        qa_text: str,
+        photo_section: str,
+        preferred_name: str | None = None,
+    ) -> str:
         """Get style-specific prompt with examples"""
         
         # Core authenticity rules
         if style == "formal":
+            subject_name = preferred_name or "The person"
             core_rules = f"""
 Chapter: {chapter_title}
 
@@ -136,7 +168,8 @@ Q&A:
    - DO NOT invent details, emotions, or events.
 
 2. FORMAL VOICE
-   - CONVERT "I" to "The subject" or "He/She".
+    - CONVERT "I" to "{subject_name}" or "He/She".
+    - NEVER use the phrase "The subject".
    - Remove conversational quirks.
    - Use objective, professional language.
 
@@ -259,23 +292,25 @@ USE ONLY USER'S EXACT WORDS - just arrange them beautifully!
 """
         
         elif style == "formal":
-            return core_rules + """
+            subject_name = preferred_name or "The person"
+            return core_rules + f"""
 📝 STYLE: Formal (Biographical Record)
 
 HOW TO WRITE:
-- Third-person (The subject, He/She) OR neutral first-person
+- Third-person using {subject_name} (and He/She where needed)
 - Clear, structured, factual
 - Minimal emotion
 - No contractions (use "was not" not "wasn't")
 - Precise word choice
-- CHANGE PRONOUNS: "I" -> "The subject" or "He/She"
+- CHANGE PRONOUNS: "I" -> "{subject_name}" or "He/She"
+- NEVER use the phrase "The subject"
 
 EXAMPLE TRANSFORMATION:
 Q: Tell me about your siblings.
 A: I have two siblings. My sister Ayesha is three years older, and my brother Rafi is two years younger.
 
 ✅ CORRECT OUTPUT:
-"The subject has two siblings: Ayesha, three years senior, and Rafi, two years junior. Family structure consisted of three children with the subject positioned as the middle child."
+"{subject_name} has two siblings: Ayesha, three years senior, and Rafi, two years junior. Family structure consisted of three children with {subject_name} positioned as the middle child."
 
 ❌ WRONG (too conversational):
 "Yes, I have two siblings. My elder sister is Ayesha, who's three years older than me..."
