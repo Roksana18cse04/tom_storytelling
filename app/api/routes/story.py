@@ -3,6 +3,7 @@
 from fastapi import APIRouter, HTTPException, Query
 from app.services.narrative_engine import narrative_engine
 from app.core.database import story_collection
+from app.services.story_cache import get_or_generate_chapter, get_or_generate_full_story
 import datetime
 
 router = APIRouter()
@@ -16,50 +17,35 @@ async def generate_chapter(
 ):
     """Generate a narrative chapter for a specific category."""
     category = category.lower()
-    
-    # Check if story already exists in database
-    existing_story = await story_collection.find_one({
-        "user_id": user_id,
-        "session_id": session_id,
-        "category": category,
-        "style": style
-    })
-    
-    # If exists, return from database (cached)
-    if existing_story:
-        return {
-            "_id": str(existing_story['_id']),
+
+    chapter, from_cache, _source_fingerprint = await get_or_generate_chapter(
+        user_id=user_id,
+        session_id=session_id,
+        category=category,
+        style=style,
+    )
+
+    if chapter.startswith("No ") or chapter.startswith("Error"):
+        raise HTTPException(status_code=404, detail=chapter)
+
+    # Fetch the stored doc to return _id consistently.
+    stored = await story_collection.find_one(
+        {
             "user_id": user_id,
             "session_id": session_id,
             "category": category,
             "style": style,
-            "chapter": existing_story["chapter"],
-            "from_cache": True
         }
-    
-    # Generate new story
-    chapter = await narrative_engine.generate_chapter(user_id, session_id, category, style)
-    if chapter.startswith("No ") or chapter.startswith("Error"):
-        raise HTTPException(status_code=404, detail=chapter)
-    
-    # Save generated story to database and get inserted ID
-    result = await story_collection.insert_one({
-        "user_id": user_id,
-        "session_id": session_id,
-        "category": category,
-        "chapter": chapter,
-        "style": style,
-        "timestamp": datetime.datetime.now().isoformat()
-    })
-    
+    )
+
     return {
-        "_id": str(result.inserted_id),
+        "_id": str(stored["_id"]) if stored and stored.get("_id") else None,
         "user_id": user_id,
         "session_id": session_id,
         "category": category,
         "style": style,
         "chapter": chapter,
-        "from_cache": False
+        "from_cache": from_cache
     }
 
 
@@ -70,23 +56,32 @@ async def generate_full_story(
     style: str = Query("conversational", description="Style: conversational, literary, formal, reflective, light_hearted or concise")
 ):
     """Generate complete life story as single continuous narrative with smooth transitions."""
-    result = await narrative_engine.generate_full_story(user_id, session_id, style)
-    if "error" in result:
-        raise HTTPException(status_code=404, detail=result["error"])
-    
-    # Combine chapters into single continuous story with AI-generated transitions
-    chapters_dict = result["chapters"]
-    if not chapters_dict:
-        raise HTTPException(status_code=404, detail="No chapters found")
-    
-    # Create continuous story with smooth transitions
-    continuous_story = await narrative_engine.combine_chapters_with_transitions(chapters_dict, style)
-    
+    story_text, from_cache, _source_fingerprint = await get_or_generate_full_story(
+        user_id=user_id,
+        session_id=session_id,
+        style=style,
+    )
+
+    # Preserve previous error semantics
+    if story_text.startswith("No ") or story_text.startswith("Error"):
+        raise HTTPException(status_code=404, detail=story_text)
+
+    stored = await story_collection.find_one(
+        {
+            "user_id": user_id,
+            "session_id": session_id,
+            "category": "__full__",
+            "style": style,
+        }
+    )
+
     return {
+        "_id": str(stored["_id"]) if stored and stored.get("_id") else None,
         "user_id": user_id,
         "session_id": session_id,
         "style": style,
-        "story": continuous_story
+        "story": story_text,
+        "from_cache": from_cache,
     }
 
 

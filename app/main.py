@@ -36,4 +36,3 @@ app.include_router(photo_story.router, prefix="/ai", tags=["Photo Story"])
 app.include_router(history.router,prefix="/ai", tags=["History"])
 app.include_router(depth_stats.router, prefix="/ai/depth", tags=["Depth Analytics"])
 app.include_router(depth_stats.router, prefix="/ai/depth", tags=["Depth Analytics"])
-
